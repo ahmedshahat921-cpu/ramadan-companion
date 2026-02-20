@@ -7,7 +7,7 @@ const errorMsg = document.getElementById('error-msg');
 const successMsg = document.getElementById('success-msg');
 
 let isLogin = true;
-const API_URL = 'http://localhost:5000';
+const API_URL = ''; // Use relative path for production
 
 toggleLink.addEventListener('click', () => {
     isLogin = !isLogin;
@@ -27,8 +27,6 @@ authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-
-    // تم إزالة شرط طول كلمة المرور حسب الطلب
 
     const endpoint = isLogin ? '/login' : '/register';
 

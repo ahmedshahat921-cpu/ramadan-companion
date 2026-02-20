@@ -21,9 +21,28 @@ app.get('/', (req, res) => {
 });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/antigravity', {})
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedDb) {
+        return cachedDb;
+    }
+    const db = await mongoose.connect(process.env.MONGO_URI, {});
+    cachedDb = db;
+    console.log('MongoDB Connected');
+    return db;
+}
+
+// Ensure DB connection on every request
+app.use(async (req, res, next) => {
+    try {
+        await connectToDatabase();
+        next();
+    } catch (error) {
+        console.error('Database connection error:', error);
+        res.status(500).json({ msg: 'Database connection failed' });
+    }
+});
 
 // Routes
 
