@@ -8,6 +8,18 @@
     ],
     "routes": [
         {
+            "src": "/register",
+            "dest": "/server.js"
+        },
+        {
+            "src": "/login",
+            "dest": "/server.js"
+        },
+        {
+            "src": "/public/(.*)",
+            "dest": "/public/$1"
+        },
+        {
             "handle": "filesystem"
         },
         {

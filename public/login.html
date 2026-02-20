@@ -4,211 +4,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - رفيق رمضان</title>
+    <title>تسجيل الدخول - رفيق رمضان 🌙</title>
+    <meta name="description" content="سجّل دخولك لرفيق رمضان">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <style>
-        .auth-container {
+        /* ===== Auth Page Styles ===== */
+        .auth-page-bg {
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            min-height: 80vh;
+            justify-content: center;
             padding: 20px;
+            background: linear-gradient(160deg, #0f172a 0%, #1e2d3d 50%, #0d2118 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-page-bg::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .auth-page-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
         }
 
         .auth-card {
-            background-color: var(--card-light);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: var(--shadow-main);
+            background: rgba(30, 41, 59, 0.95);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.5s ease;
         }
 
-        body.dark-mode .auth-card {
-            background-color: var(--card-dark);
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .auth-logo {
-            color: var(--primary-color);
-            font-size: 3rem;
-            margin-bottom: 20px;
+        .auth-logo-wrap {
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+        }
+
+        .auth-logo-wrap i {
+            font-size: 2.2rem;
+            color: white;
         }
 
         .auth-title {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: var(--primary-color);
+            font-family: 'Amiri', serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #f8fafc;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 28px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             text-align: right;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-size: 0.9rem;
-            opacity: 0.8;
+            font-size: 0.95rem;
+            color: #94a3b8;
             font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            background-color: var(--bg-light);
-            color: var(--text-light);
+            padding: 13px 16px;
+            border-radius: 12px;
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f8fafc;
             font-family: 'Cairo', sans-serif;
             font-size: 1rem;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
             text-align: right;
         }
 
-        body.dark-mode .form-group input {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .form-group input::placeholder {
+            color: #475569;
+            font-size: 0.9rem;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: #10B981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        /* ===== Eye Icon for Password ===== */
+        .toggle-password-btn {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            font-size: 1.05rem;
+            padding: 5px;
+            border-radius: 6px;
+            transition: color 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password-btn:hover {
+            color: #10B981;
+        }
+
+        .form-group input[type="password"],
+        .form-group input[type="text"] {
+            padding-left: 45px;
+            /* space for eye icon */
         }
 
         .auth-btn {
             width: 100%;
-            padding: 12px;
-            border-radius: 10px;
+            padding: 14px;
+            border-radius: 12px;
             border: none;
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #10B981, #059669);
             color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 10px;
+            transition: all 0.3s;
+            margin-top: 8px;
             font-family: 'Cairo', sans-serif;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .auth-btn:hover {
-            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
         }
 
         .toggle-text {
-            margin-top: 20px;
-            font-size: 0.9rem;
-            opacity: 0.8;
+            margin-top: 22px;
+            font-size: 0.95rem;
+            color: #64748b;
         }
 
         .toggle-link {
-            color: var(--primary-color);
+            color: #10B981;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
+            text-decoration: none;
+            margin-right: 4px;
+            transition: color 0.2s;
+        }
+
+        .toggle-link:hover {
+            color: #34d399;
             text-decoration: underline;
         }
 
         .error-msg {
-            color: #ef4444;
-            /* Red 500 */
-            margin-bottom: 15px;
-            font-size: 0.9rem;
+            color: #f87171;
+            margin-bottom: 14px;
+            font-size: 0.92rem;
             display: none;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            text-align: right;
         }
 
         .success-msg {
-            color: #10B981;
-            /* Green 500 */
-            margin-bottom: 15px;
-            font-size: 0.9rem;
+            color: #34d399;
+            margin-bottom: 14px;
+            font-size: 0.92rem;
             display: none;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            text-align: right;
+        }
+
+        /* Theme toggle in corner */
+        .theme-corner {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #94a3b8;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .theme-corner:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+
+        .app-name {
+            position: absolute;
+            top: 22px;
+            right: 20px;
+            color: #10B981;
+            font-family: 'Amiri', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
         }
     </style>
 </head>
 
 <body class="dark-mode">
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <i class="fa-solid fa-moon"></i>
-                <h1>رفيق رمضان</h1>
-            </div>
-            <button id="theme-toggle" class="icon-btn" aria-label="تغيير المظهر">
-                <i class="fa-solid fa-sun"></i>
-            </button>
-        </header>
+    <div class="auth-page-bg">
+        <!-- App Name -->
+        <div class="app-name">
+            <i class="fa-solid fa-moon"></i>
+            رفيق رمضان
+        </div>
 
-        <div class="auth-container">
-            <div class="auth-card">
-                <div class="auth-logo">
-                    <i class="fa-solid fa-mosque"></i>
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-corner" aria-label="تغيير المظهر">
+            <i class="fa-solid fa-sun"></i>
+        </button>
+
+        <div class="auth-card">
+            <!-- Logo -->
+            <div class="auth-logo-wrap">
+                <i class="fa-solid fa-mosque"></i>
+            </div>
+
+            <h2 id="form-title" class="auth-title">تسجيل الدخول</h2>
+            <p class="auth-subtitle">أهلاً بك في رفيق رمضان 🌙</p>
+
+            <!-- Messages -->
+            <div id="error-msg" class="error-msg"></div>
+            <div id="success-msg" class="success-msg"></div>
+
+            <form id="auth-form">
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fa-solid fa-user" style="margin-left:6px; color:#10B981;"></i>
+                        اسم المستخدم
+                    </label>
+                    <input type="text" id="username" required placeholder="ادخل اسم المستخدم" autocomplete="username">
                 </div>
-                <h2 id="form-title" class="auth-title">تسجيل الدخول</h2>
 
-                <div id="error-msg" class="error-msg"></div>
-                <div id="success-msg" class="success-msg"></div>
-
-                <form id="auth-form">
-                    <div class="form-group">
-                        <label for="username">اسم المستخدم</label>
-                        <input type="text" id="username" required placeholder="ادخل اسم المستخدم">
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fa-solid fa-lock" style="margin-left:6px; color:#10B981;"></i>
+                        كلمة المرور
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="كلمة المرور" required
+                            autocomplete="current-password">
+                        <button type="button" class="toggle-password-btn" id="toggle-password"
+                            aria-label="إظهار/إخفاء كلمة المرور">
+                            <i class="fa-solid fa-eye" id="eye-icon"></i>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="password">كلمة المرور</label>
-                        <div style="position: relative;">
-                            <input type="password" id="password" placeholder="كلمة المرور" required>
-                            <i id="toggle-password" class="fa-solid fa-eye"
-                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
-                        </div>
-                    </div>
-                    <button type="submit" class="auth-btn" id="submit-btn">دخول</button>
-                </form>
+                </div>
 
-                <p class="toggle-text">
-                    <span id="toggle-question">ليس لديك حساب؟</span>
-                    <span id="toggle-link" class="toggle-link">إنشاء حساب جديد</span>
-                </p>
-            </div>
+                <button type="submit" class="auth-btn" id="submit-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    دخول
+                </button>
+            </form>
+
+            <p class="toggle-text">
+                <span id="toggle-question">ليس لديك حساب؟</span>
+                <span id="toggle-link" class="toggle-link">إنشاء حساب جديد</span>
+            </p>
         </div>
     </div>
 
     <script src="auth.js"></script>
     <script>
-        // Theme Toggle Logic (copied primarily from script.js just for this page)
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const body = document.body;
+        // ===== Password Eye Toggle =====
+        const toggleBtn = document.getElementById('toggle-password');
+        const passInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eye-icon');
 
-        // Check saved theme
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = passInput.type === 'password';
+            passInput.type = isHidden ? 'text' : 'password';
+            eyeIcon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+
+        // ===== Theme Toggle =====
+        const themeBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+        const authCard = document.querySelector('.auth-card');
+
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
             body.classList.remove('dark-mode');
-            themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            themeBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            document.querySelector('.auth-page-bg').style.background = 'linear-gradient(160deg, #ecfdf5 0%, #f0fdf4 100%)';
+            if (authCard) { authCard.style.background = 'rgba(255,255,255,0.95)'; authCard.style.color = '#1e293b'; }
         }
 
-        themeToggleBtn.addEventListener('click', () => {
+        themeBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
             const isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggleBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+            themeBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         });
 
-        // Register Service Worker
+        // ===== Service Worker =====
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registered'))
-                    .catch(err => console.log('SW fail', err));
+                navigator.serviceWorker.register('./sw.js').catch(() => { });
             });
         }
     </script>

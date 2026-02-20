@@ -1,3 +1,4 @@
+// ===== DOM Elements =====
 const authForm = document.getElementById('auth-form');
 const formTitle = document.getElementById('form-title');
 const submitBtn = document.getElementById('submit-btn');
@@ -8,27 +9,26 @@ const successMsg = document.getElementById('success-msg');
 const togglePassword = document.getElementById('toggle-password');
 const passwordInput = document.getElementById('password');
 
-// --- Password Visibility Toggle ---
+// ===== Password Visibility Toggle =====
 if (togglePassword && passwordInput) {
     togglePassword.addEventListener('click', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
-
-        // Toggle Icon
         togglePassword.classList.toggle('fa-eye');
         togglePassword.classList.toggle('fa-eye-slash');
     });
 }
 
-
-// --- Auto-Redirect if Already Logged In ---
+// ===== Auto-Redirect if Already Logged In =====
 if (localStorage.getItem('username')) {
     window.location.href = 'index.html';
 }
 
+// ===== State =====
 let isLogin = true;
-const API_URL = ''; // Use relative path for production
+let isLoading = false;
 
+// ===== Toggle Between Login / Register =====
 toggleLink.addEventListener('click', () => {
     isLogin = !isLogin;
     updateUI();
@@ -37,48 +37,75 @@ toggleLink.addEventListener('click', () => {
 function updateUI() {
     formTitle.innerText = isLogin ? 'تسجيل الدخول' : 'إنشاء حساب';
     submitBtn.innerText = isLogin ? 'دخول' : 'تسجيل';
-    toggleQuestion.innerText = isLogin ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟";
+    toggleQuestion.innerText = isLogin ? 'ليس لديك حساب؟' : 'لديك حساب بالفعل؟';
     toggleLink.innerText = isLogin ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    hideMessages();
+}
+
+function hideMessages() {
     errorMsg.style.display = 'none';
     successMsg.style.display = 'none';
 }
 
+// ===== Form Submit =====
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = document.getElementById('username').value;
+
+    if (isLoading) return;
+
+    const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
+
+    // Client-side validation
+    if (!username || !password) {
+        showError('يرجى ملء جميع الحقول');
+        return;
+    }
+
+    if (!isLogin && username.length < 3) {
+        showError('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+        return;
+    }
+
+    if (!isLogin && password.length < 6) {
+        showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
 
     const endpoint = isLogin ? '/login' : '/register';
 
+    setLoading(true);
+    hideMessages();
+
     try {
-        const res = await fetch(`${API_URL}${endpoint}`, {
+        const res = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
 
-        const contentType = res.headers.get("content-type");
         let data;
-
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+        try {
             data = await res.json();
-        } else {
-            // If response is not JSON (e.g. Server Error text or Vercel HTML error)
-            const text = await res.text();
-            throw new Error(text || 'حدث خطأ في السيرفر (غير معروف)');
+        } catch {
+            throw new Error('استجابة غير متوقعة من السيرفر. تأكد من الاتصال.');
         }
 
-        if (!res.ok) {
-            throw new Error(data.msg || 'حدث خطأ ما');
+        if (!res.ok || !data.success) {
+            throw new Error(data.msg || 'حدث خطأ ما، حاول مرة أخرى');
         }
 
+        // ===== SUCCESS =====
         if (isLogin) {
+            // Save username and redirect
             localStorage.setItem('username', data.username);
-            window.location.href = 'index.html';
+            showSuccess('تم تسجيل الدخول! جاري التحويل...');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 800);
         } else {
-            showSuccess('تم التسجيل بنجاح! الرجاء تسجيل الدخول.');
+            // After register, switch to login mode
+            showSuccess('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.');
             isLogin = true;
             updateUI();
             document.getElementById('username').value = '';
@@ -86,16 +113,14 @@ authForm.addEventListener('submit', async (e) => {
         }
 
     } catch (err) {
-        console.error('Login Error:', err);
-        // Clean up the error message if it's a long HTML string
-        let msg = err.message;
-        if (msg.includes('<!DOCTYPE html>')) {
-            msg = 'خطأ في السيرفر (500) - تأكد من قاعدة البيانات';
-        }
-        showError(msg === 'Invalid Credentials' ? 'بيانات الدخول غير صحيحة' : msg);
+        console.error('Auth Error:', err);
+        showError(err.message || 'حدث خطأ في الاتصال بالسيرفر');
+    } finally {
+        setLoading(false);
     }
 });
 
+// ===== Helper Functions =====
 function showError(msg) {
     errorMsg.innerText = msg;
     errorMsg.style.display = 'block';
@@ -106,4 +131,13 @@ function showSuccess(msg) {
     successMsg.innerText = msg;
     successMsg.style.display = 'block';
     errorMsg.style.display = 'none';
+}
+
+function setLoading(state) {
+    isLoading = state;
+    submitBtn.disabled = state;
+    submitBtn.innerText = state
+        ? (isLogin ? 'جاري الدخول...' : 'جاري التسجيل...')
+        : (isLogin ? 'دخول' : 'تسجيل');
+    submitBtn.style.opacity = state ? '0.7' : '1';
 }
