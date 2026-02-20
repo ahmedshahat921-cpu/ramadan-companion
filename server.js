@@ -27,10 +27,25 @@ async function connectToDatabase() {
     if (cachedDb) {
         return cachedDb;
     }
-    const db = await mongoose.connect(process.env.MONGO_URI, {});
-    cachedDb = db;
-    console.log('MongoDB Connected');
-    return db;
+
+    const uri = process.env.MONGO_URI;
+
+    if (!uri) {
+        throw new Error('MONGO_URI Environment Variable is not defined in Vercel');
+    }
+
+    try {
+        const db = await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 5000, // Fail fast if no connection after 5s
+            socketTimeoutMS: 45000,
+        });
+        cachedDb = db;
+        console.log('MongoDB Connected');
+        return db;
+    } catch (err) {
+        console.error('Mongoose connect error:', err);
+        throw err;
+    }
 }
 
 // Ensure DB connection on every request
@@ -40,8 +55,11 @@ app.use(async (req, res, next) => {
         next();
     } catch (error) {
         console.error('Database connection error:', error);
-        // Return actual error message for debugging
-        res.status(500).json({ msg: `Database connection failed: ${error.message}` });
+        // Return highly detailed error for debugging
+        res.status(500).json({
+            msg: `فشل الاتصال بقاعدة البيانات: ${error.message}`,
+            details: error.toString()
+        });
     }
 });
 

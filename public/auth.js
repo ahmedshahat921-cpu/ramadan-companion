@@ -5,6 +5,21 @@ const toggleLink = document.getElementById('toggle-link');
 const toggleQuestion = document.getElementById('toggle-question');
 const errorMsg = document.getElementById('error-msg');
 const successMsg = document.getElementById('success-msg');
+const togglePassword = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('password');
+
+// --- Password Visibility Toggle ---
+if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // Toggle Icon
+        togglePassword.classList.toggle('fa-eye');
+        togglePassword.classList.toggle('fa-eye-slash');
+    });
+}
+
 
 // --- Auto-Redirect if Already Logged In ---
 if (localStorage.getItem('username')) {

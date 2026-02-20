@@ -166,7 +166,11 @@
                     </div>
                     <div class="form-group">
                         <label for="password">كلمة المرور</label>
-                        <input type="password" id="password" required placeholder="ادخل كلمة المرور">
+                        <div style="position: relative;">
+                            <input type="password" id="password" placeholder="كلمة المرور" required>
+                            <i id="toggle-password" class="fa-solid fa-eye"
+                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                        </div>
                     </div>
                     <button type="submit" class="auth-btn" id="submit-btn">دخول</button>
                 </form>
