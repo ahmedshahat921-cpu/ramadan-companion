@@ -40,7 +40,8 @@ app.use(async (req, res, next) => {
         next();
     } catch (error) {
         console.error('Database connection error:', error);
-        res.status(500).json({ msg: 'Database connection failed' });
+        // Return actual error message for debugging
+        res.status(500).json({ msg: `Database connection failed: ${error.message}` });
     }
 });
 
@@ -49,8 +50,14 @@ app.use(async (req, res, next) => {
 // Register
 app.post('/register', async (req, res) => {
     try {
+        // Enforce Single User Policy
+        const userCount = await User.countDocuments();
+        if (userCount > 0) {
+            return res.status(400).json({ msg: 'التسجيل مغلق: يوجد مستخدم مسجل بالفعل' });
+        }
+
         const { username, password } = req.body;
-        // Check if user exists
+        // Check if user exists (redundant but safe)
         let user = await User.findOne({ username });
         if (user) {
             return res.status(400).json({ msg: 'User already exists' });
