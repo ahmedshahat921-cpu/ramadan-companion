@@ -11,8 +11,9 @@ const successMsg = document.getElementById('success-msg');
 // NOTE: Do NOT add eye toggle here to avoid double-binding conflict
 
 // ===== Auto-Redirect if Already Logged In =====
+// Use replace() so pressing Back won't return to login
 if (localStorage.getItem('username')) {
-    window.location.href = 'index.html';
+    window.location.replace('index.html');
 }
 
 // ===== State =====
@@ -98,7 +99,8 @@ authForm.addEventListener('submit', async (e) => {
             localStorage.setItem('username', data.username);
             showSuccess('✅ تم تسجيل الدخول! جاري التحويل...');
             setTimeout(() => {
-                window.location.href = 'index.html';
+                // replace() prevents Back button from returning to login
+                window.location.replace('index.html');
             }, 700);
         } else {
             showSuccess('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.');

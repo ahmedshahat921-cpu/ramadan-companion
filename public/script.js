@@ -1,91 +1,112 @@
 /**
- * رفيق رمضان - Main App Logic (v3 - Full Fix)
- * All features: Azkar tabs, Prayer times auto-detect, Duaa from JSON,
- * Setup wizard on first login, celebrations, notifications.
+ * رفيق رمضان - v4 (Full Rewrite - All fixes)
  */
 
-// ===== Auth Guard =====
+// ===== Auth Guard (redirect to login if no session) =====
 const username = localStorage.getItem('username');
 if (!username) {
-    window.location.href = 'login.html';
+    window.location.replace('login.html');
 }
 
+// ===== Prevent browser back going to login =====
+history.pushState({ page: 'app' }, '', window.location.href);
+window.addEventListener('popstate', () => {
+    history.pushState({ page: 'app' }, '', window.location.href);
+    if (window.app) app._navigate('home');
+});
+
+// ===== Juz page ranges (standard Uthmani Hafs) =====
+const JUZ_PAGES = [
+    [1, 21], [22, 41], [42, 61], [62, 81], [82, 101], [102, 121], [122, 141], [142, 161], [162, 181], [182, 201],
+    [202, 221], [222, 241], [242, 261], [262, 281], [282, 301], [302, 321], [322, 341], [342, 361], [362, 381],
+    [382, 401], [402, 421], [422, 441], [442, 461], [462, 481], [482, 501], [502, 521], [522, 541], [542, 561],
+    [562, 581], [582, 604]
+];
+
+// ===== Tasbeeh Azkar Options =====
+const AZKAR_OPTIONS = [
+    { id: 0, label: 'سبحان الله', arabic: 'سُبْحَانَ اللَّه', milestone: 33 },
+    { id: 1, label: 'الحمد لله', arabic: 'اَلْحَمْدُ لِلَّه', milestone: 33 },
+    { id: 2, label: 'الله أكبر', arabic: 'اَللَّهُ أَكْبَر', milestone: 33 },
+    { id: 3, label: 'استغفر الله', arabic: 'أَسْتَغْفِرُ اللَّه', milestone: 100 },
+    { id: 4, label: 'لا إله إلا الله', arabic: 'لَا إِلَهَ إِلَّا اللَّه', milestone: 100 },
+    { id: 5, label: 'سبحان الله وبحمده', arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِه', milestone: 100 },
+    { id: 6, label: 'لا حول ولا قوة إلا بالله', arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّه', milestone: 100 },
+    { id: 7, label: 'اللهم صل على النبي', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّد', milestone: 100 },
+];
+
 // ===== Azkar Data =====
-const azkarData = {
+const AZKAR_DATA = {
     morning: [
-        { arabic: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ. اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ...", count: 1, source: "آية الكرسي - البقرة: 255" },
-        { arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", count: 1, source: "مسلم" },
-        { arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ.", count: 1, source: "الترمذي" },
-        { arabic: "بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.", count: 3, source: "أبو داود" },
-        { arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.", count: 3, source: "أبو داود" },
-        { arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.", count: 100, source: "مسلم" },
-        { arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", count: 1, source: "الترمذي" }
+        { arabic: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ. اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ...', count: 1, source: 'آية الكرسي - البقرة: 255' },
+        { arabic: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1, source: 'مسلم' },
+        { arabic: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ.', count: 1, source: 'الترمذي' },
+        { arabic: 'بِسْمِ اللَّهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.', count: 3, source: 'أبو داود' },
+        { arabic: 'رَضِيتُ بِاللَّهِ رَبًّا، وَبِالإِسْلاَمِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.', count: 3, source: 'أبو داود' },
+        { arabic: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.', count: 100, source: 'مسلم' },
+        { arabic: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.', count: 1, source: 'الترمذي' }
     ],
     evening: [
-        { arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", count: 1, source: "مسلم" },
-        { arabic: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ.", count: 1, source: "الترمذي" },
-        { arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.", count: 3, source: "مسلم" },
-        { arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ.", count: 1, source: "أبو داود" },
-        { arabic: "اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.", count: 3, source: "أبو داود" },
-        { arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لاَ إِلَهَ إِلاَّ أَنْتَ.", count: 3, source: "النسائي" }
+        { arabic: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1, source: 'مسلم' },
+        { arabic: 'اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ.', count: 1, source: 'الترمذي' },
+        { arabic: 'أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.', count: 3, source: 'مسلم' },
+        { arabic: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ.', count: 1, source: 'أبو داود' },
+        { arabic: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لاَ إِلَهَ إِلاَّ أَنْتَ.', count: 3, source: 'أبو داود' },
+        { arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لاَ إِلَهَ إِلاَّ أَنْتَ.', count: 3, source: 'النسائي' }
     ],
     prayer: [
-        { arabic: "أَسْتَغْفِرُ اللَّهَ.", count: 3, source: "مسلم" },
-        { arabic: "اللَّهُمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ.", count: 1, source: "مسلم" },
-        { arabic: "لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", count: 1, source: "البخاري" },
-        { arabic: "اللَّهُمَّ لاَ مَانِعَ لِمَا أَعْطَيْتَ، وَلاَ مُعْطِيَ لِمَا مَنَعْتَ، وَلاَ يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ.", count: 1, source: "البخاري ومسلم" },
-        { arabic: "سُبْحَانَ اللَّهِ (33) الْحَمْدُ لِلَّهِ (33) اللَّهُ أَكْبَرُ (33) ثم لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.", count: 1, source: "مسلم" },
-        { arabic: "آيَةُ الْكُرْسِيِّ بَعْدَ كُلِّ صَلَاةٍ - من قرأها لم يحل بينه وبين الجنة إلا الموت.", count: 1, source: "النسائي" }
+        { arabic: 'أَسْتَغْفِرُ اللَّهَ.', count: 3, source: 'مسلم' },
+        { arabic: 'اللَّهُمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ.', count: 1, source: 'مسلم' },
+        { arabic: 'لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1, source: 'البخاري' },
+        { arabic: 'اللَّهُمَّ لاَ مَانِعَ لِمَا أَعْطَيْتَ، وَلاَ مُعْطِيَ لِمَا مَنَعْتَ، وَلاَ يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ.', count: 1, source: 'البخاري ومسلم' },
+        { arabic: 'سُبْحَانَ اللَّهِ (33) الْحَمْدُ لِلَّهِ (33) اللَّهُ أَكْبَرُ (33) ثم لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1, source: 'مسلم' },
+        { arabic: 'آيَةُ الْكُرْسِيِّ بَعْدَ كُلِّ صَلَاةٍ - من قرأها لم يحل بينه وبين الجنة إلا الموت.', count: 1, source: 'النسائي' }
     ]
 };
 
-// ===== App Class =====
+// ==========================================
+// ===== Main App Class =====
+// ==========================================
 class RamadanApp {
     constructor() {
         this.duaaData = [];
+        this.quranPage = 1;
+        this.quranJuz = 1;
         this.state = {
             currentSection: 'home',
             theme: localStorage.getItem('theme') || 'dark',
             tasbeehCount: parseInt(localStorage.getItem('tasbeehCount')) || 0,
+            selectedAzkar: parseInt(localStorage.getItem('selectedAzkar')) || 0,
             khatmaGoal: parseInt(localStorage.getItem('khatmaGoal')) || 1,
             completedJuz: JSON.parse(localStorage.getItem('completedJuz') || '[]'),
             soundEnabled: localStorage.getItem('soundEnabled') !== 'false',
             coordinates: JSON.parse(localStorage.getItem('coordinates') || 'null'),
             notifInterval: parseInt(localStorage.getItem('notifInterval')) || 0,
-            intervalId: null,
-            prayerTimerInterval: null,
             dailyReading: JSON.parse(localStorage.getItem('dailyReading') || '{}'),
             lastReadingDate: localStorage.getItem('lastReadingDate') || new Date().toDateString(),
-            currentAzkarType: 'morning',
             _nextPrayerTime: null,
-            prayerTimes: null
+            prayerTimes: null,
+            intervalId: null,
+            countdownTimer: null,
         };
         this._initApp();
     }
 
+    // ------------------------------------------
     async _initApp() {
-        // Daily reset check
         this._checkDayReset();
-
-        // Apply theme first (instant)
         this._applyTheme();
-
-        // Setup event listeners
         this._setupListeners();
-
-        // Render static content
         this.renderAzkar('morning');
+        this._renderTasbeehAzkarSelector();
         this._updateTasbeehDisplay();
         this._updateQuranPlanner();
         this._renderJuzGrid();
         this._updateHijriDate();
         this._restoreReadingChecks();
+        this._updateGreeting();
 
-        // Greeting
-        const greeting = document.querySelector('.greeting-card h2');
-        if (greeting) greeting.innerHTML = `رمضان كريم 🌙<br><small style="font-size:1.1rem;opacity:0.9;">${username}</small>`;
-
-        // Load duaa from JSON
+        // Duaa
         await this._loadDuaa();
 
         // Prayer times
@@ -95,75 +116,73 @@ class RamadanApp {
             this._autoDetectLocation();
         }
 
-        // Notifications timer
-        const savedInterval = document.getElementById('notif-interval');
-        if (savedInterval) savedInterval.value = this.state.notifInterval;
         this._startNotifTimer();
 
-        // Show setup wizard on first use
-        const firstUse = !localStorage.getItem('setupDone');
-        if (firstUse) {
+        // First-use wizard
+        if (!localStorage.getItem('setupDone')) {
             setTimeout(() => this._showSetupWizard(), 1200);
         }
     }
 
-    // ============================================================
+    // ------------------------------------------
+    // ===== Dashboard Greeting =====
+    // ------------------------------------------
+    _updateGreeting() {
+        const el = document.getElementById('greeting-text');
+        if (!el) return;
+        const firstName = username.split(' ')[0];
+        el.innerHTML = `رمضان كريم وكل سنه وانتم طيبين 🌙<br>
+            <small style="font-size:1rem; opacity:0.9; font-weight:500;">
+                أهلاً بك ${firstName} ✨
+            </small>`;
+    }
+
+    // ------------------------------------------
     // ===== Setup Wizard =====
-    // ============================================================
+    // ------------------------------------------
     _showSetupWizard() {
-        const modal = document.getElementById('setup-modal');
-        if (modal) modal.style.display = 'flex';
+        const m = document.getElementById('setup-modal');
+        if (m) m.style.display = 'flex';
     }
 
     closeSetupWizard() {
-        const modal = document.getElementById('setup-modal');
-        if (modal) modal.style.display = 'none';
-
-        const goalEl = document.getElementById('setup-goal');
-        if (goalEl) {
-            this.state.khatmaGoal = parseInt(goalEl.value) || 1;
+        const m = document.getElementById('setup-modal');
+        if (m) m.style.display = 'none';
+        const g = document.getElementById('setup-goal');
+        if (g) {
+            this.state.khatmaGoal = parseInt(g.value) || 1;
             localStorage.setItem('khatmaGoal', this.state.khatmaGoal);
             this._updateQuranPlanner();
         }
-
         localStorage.setItem('setupDone', 'true');
-
-        // Request location and notifications
         this._autoDetectLocation();
         this._requestNotifPermission();
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Event Listeners =====
-    // ============================================================
+    // ------------------------------------------
     _setupListeners() {
-        // Theme toggle
-        const themeBtn = document.getElementById('theme-toggle');
+        const $ = id => document.getElementById(id);
+        const themeBtn = $('theme-toggle');
+        const tasbeehBtn = $('tasbeeh-btn');
+        const logoutBtn = $('logout-btn');
+        const notifSel = $('notif-interval');
+
         if (themeBtn) themeBtn.addEventListener('click', () => this._toggleTheme());
-
-        // Tasbeeh button
-        const tasbeehBtn = document.getElementById('tasbeeh-btn');
         if (tasbeehBtn) tasbeehBtn.addEventListener('click', () => this._incrementTasbeeh());
-
-        // Logout
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                if (confirm('هل أنت متأكد أنك تريد تسجيل الخروج؟')) {
-                    localStorage.removeItem('username');
-                    window.location.href = 'login.html';
-                }
-            });
-        }
-
-        // Notif interval change
-        const notifSel = document.getElementById('notif-interval');
-        if (notifSel) notifSel.addEventListener('change', e => this._setNotifInterval(parseInt(e.target.value)));
+        if (logoutBtn) logoutBtn.addEventListener('click', () => {
+            if (confirm('تسجيل الخروج؟')) {
+                localStorage.removeItem('username');
+                window.location.replace('login.html');
+            }
+        });
+        if (notifSel) notifSel.addEventListener('change', e => this._setNotifInterval(+e.target.value));
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Theme =====
-    // ============================================================
+    // ------------------------------------------
     _toggleTheme() {
         this.state.theme = this.state.theme === 'dark' ? 'light' : 'dark';
         localStorage.setItem('theme', this.state.theme);
@@ -171,59 +190,46 @@ class RamadanApp {
     }
 
     _applyTheme() {
-        const body = document.body;
         const btn = document.getElementById('theme-toggle');
         if (this.state.theme === 'dark') {
-            body.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
             if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
         } else {
-            body.classList.remove('dark-mode');
+            document.body.classList.remove('dark-mode');
             if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
         }
     }
 
-    // Public alias for onclick
-    get navigate() { return this._navigate.bind(this); }
-    get openSettings() { return this._openSettings.bind(this); }
-    get closeSettings() { return this._closeSettings.bind(this); }
-    get detectLocation() { return this._detectLocation.bind(this); }
-    get filterAzkar() { return this.renderAzkar.bind(this); }
-    get adjustGoal() { return this._adjustGoal.bind(this); }
-    get togglePrayerRead() { return this._togglePrayerRead.bind(this); }
-    get toggleJuz() { return this._toggleJuz.bind(this); }
-    get resetTasbeeh() { return this._resetTasbeeh.bind(this); }
-    get toggleSound() { return this._toggleSound.bind(this); }
-
-    // ============================================================
+    // ------------------------------------------
     // ===== Navigation =====
-    // ============================================================
+    // ------------------------------------------
     _navigate(sectionId) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active-section'));
-        const target = document.getElementById(sectionId);
-        if (target) target.classList.add('active-section');
+        const t = document.getElementById(sectionId);
+        if (t) t.classList.add('active-section');
 
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        const navMap = { home: 0, quran: 1, tasbeeh: 2, duaa: 3 };
-        const idx = navMap[sectionId];
-        if (idx !== undefined) {
-            const items = document.querySelectorAll('.nav-item');
-            if (items[idx]) items[idx].classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const map = { home: 0, quran: 1, tasbeeh: 2, duaa: 3 };
+        const items = document.querySelectorAll('.nav-item');
+        if (map[sectionId] !== undefined && items[map[sectionId]]) {
+            items[map[sectionId]].classList.add('active');
         }
-
         this.state.currentSection = sectionId;
         window.scrollTo(0, 0);
     }
 
-    // ============================================================
-    // ===== Settings Modal =====
-    // ============================================================
+    // ------------------------------------------
+    // ===== Settings =====
+    // ------------------------------------------
     _openSettings() {
         const m = document.getElementById('settings-modal');
         if (m) m.style.display = 'flex';
-        const locationStatus = document.getElementById('location-status');
-        if (locationStatus && this.state.coordinates) {
-            locationStatus.textContent = `✅ الموقع محفوظ (خط العرض: ${this.state.coordinates.latitude.toFixed(2)})`;
+        const ls = document.getElementById('location-status');
+        if (ls && this.state.coordinates) {
+            ls.textContent = `✅ الموقع محفوظ (خط العرض: ${this.state.coordinates.latitude.toFixed(2)})`;
         }
+        const ni = document.getElementById('notif-interval');
+        if (ni) ni.value = this.state.notifInterval;
     }
 
     _closeSettings() {
@@ -231,14 +237,11 @@ class RamadanApp {
         if (m) m.style.display = 'none';
     }
 
-    // ============================================================
-    // ===== Location & Prayer Times =====
-    // ============================================================
+    // ------------------------------------------
+    // ===== Location =====
+    // ------------------------------------------
     _autoDetectLocation() {
-        if (!navigator.geolocation) {
-            this._setDefaultLocation();
-            return;
-        }
+        if (!navigator.geolocation) { this._setDefaultLocation(); return; }
         navigator.geolocation.getCurrentPosition(
             pos => {
                 this.state.coordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
@@ -251,39 +254,31 @@ class RamadanApp {
     }
 
     _setDefaultLocation() {
-        // Default: Cairo
-        this.state.coordinates = { latitude: 30.0444, longitude: 31.2357 };
+        this.state.coordinates = { latitude: 30.0444, longitude: 31.2357 }; // Cairo
         this._calculatePrayerTimes();
-        const locStatus = document.getElementById('location-status');
-        if (locStatus) locStatus.textContent = '📍 موقع افتراضي: القاهرة';
     }
 
     _detectLocation() {
-        const locStatus = document.getElementById('location-status');
-        if (!navigator.geolocation) {
-            if (locStatus) locStatus.textContent = '❌ المتصفح لا يدعم GPS';
-            return;
-        }
-        if (locStatus) locStatus.textContent = '⏳ جاري تحديد الموقع...';
+        const ls = document.getElementById('location-status');
+        if (!navigator.geolocation) { if (ls) ls.textContent = '❌ المتصفح لا يدعم GPS'; return; }
+        if (ls) ls.textContent = '⏳ جاري تحديد الموقع...';
         navigator.geolocation.getCurrentPosition(
             pos => {
                 this.state.coordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
                 localStorage.setItem('coordinates', JSON.stringify(this.state.coordinates));
-                if (locStatus) locStatus.textContent = '✅ تم تحديث الموقع بنجاح!';
+                if (ls) ls.textContent = '✅ تم تحديث الموقع!';
                 this._calculatePrayerTimes();
             },
-            () => {
-                if (locStatus) locStatus.textContent = '❌ فشل تحديد الموقع. تأكد من تفعيل GPS.';
-            }
+            () => { if (ls) ls.textContent = '❌ فشل تحديد الموقع.'; }
         );
     }
 
+    // ------------------------------------------
+    // ===== Prayer Times =====
+    // ------------------------------------------
     _calculatePrayerTimes() {
         if (!this.state.coordinates) return;
-        if (!window.adhan) {
-            setTimeout(() => this._calculatePrayerTimes(), 1000);
-            return;
-        }
+        if (!window.adhan) { setTimeout(() => this._calculatePrayerTimes(), 1500); return; }
 
         const date = new Date();
         const coords = new adhan.Coordinates(this.state.coordinates.latitude, this.state.coordinates.longitude);
@@ -296,60 +291,70 @@ class RamadanApp {
             let h = t.getHours(), m = t.getMinutes();
             const ap = h >= 12 ? 'م' : 'ص';
             h = h % 12 || 12;
-            return `${h}:${m < 10 ? '0' + m : m} ${ap}`;
+            return `${h}:${String(m).padStart(2, '0')} ${ap}`;
         };
 
-        const names = { fajr: '🌅 الفجر', sunrise: '🌄 الشروق', dhuhr: '☀️ الظهر', asr: '🌤 العصر', maghrib: '🌇 المغرب', isha: '🌙 العشاء', none: '🌙 العشاء' };
-        const shortNames = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
+        const ARABIC = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
+        const EMOJIS = { fajr: '🌅', dhuhr: '☀️', asr: '🌤', maghrib: '🌇', isha: '🌙' };
 
-        // Show all prayer times in the list
+        // Show prayer list
         const pList = document.getElementById('prayer-times-list');
         if (pList) {
             pList.style.display = 'block';
-            pList.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">` +
-                ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map(p => `
-                <div style="background:rgba(255,255,255,0.1);padding:8px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:0.85rem;opacity:0.9;">${shortNames[p]}</span>
-                    <span style="font-weight:700;color:#86efad;font-size:0.9rem;">${fmt(pt[p])}</span>
-                </div>`).join('') + `</div>`;
+            pList.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">` +
+                ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map(p =>
+                    `<div style="background:rgba(255,255,255,0.1);padding:8px 10px;border-radius:10px;
+                        display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.85rem;">${EMOJIS[p]} ${ARABIC[p]}</span>
+                        <strong style="color:#86efad;font-size:0.9rem;">${fmt(pt[p])}</strong>
+                    </div>`
+                ).join('') + '</div>';
         }
 
         // Next prayer
         const next = pt.nextPrayer();
-        const nextTime = next !== 'none' ? pt.timeForPrayer(next) : null;
+        const nextTime = (next && next !== 'none') ? pt.timeForPrayer(next) : null;
         this.state._nextPrayerTime = nextTime;
 
-        const pEl = document.getElementById('next-prayer-name');
-        const tEl = document.getElementById('next-prayer-time');
-        if (pEl) pEl.textContent = names[next] || 'الفجر';
-        if (tEl && nextTime) tEl.textContent = fmt(nextTime);
+        const nameEl = document.getElementById('next-prayer-name');
+        const timeEl = document.getElementById('next-prayer-time');
+        if (nameEl) nameEl.textContent = (EMOJIS[next] || '') + ' ' + (ARABIC[next] || 'الفجر');
+        if (timeEl && nextTime) timeEl.textContent = fmt(nextTime);
 
+        // Start countdown
+        if (this.state.countdownTimer) clearInterval(this.state.countdownTimer);
         this._updateCountdown();
-
-        // Stop existing timer and start new one
-        if (this.state.prayerTimerInterval) clearInterval(this.state.prayerTimerInterval);
-        this.state.prayerTimerInterval = setInterval(() => {
-            this._updateCountdown();
-            // Recalculate every 5 minutes
-        }, 30000);
+        this.state.countdownTimer = setInterval(() => this._updateCountdown(), 1000);
     }
 
     _updateCountdown() {
         if (!this.state._nextPrayerTime) return;
-        const diff = this.state._nextPrayerTime - new Date();
+
+        const diff = this.state._nextPrayerTime - Date.now();
+
         if (diff <= 0) {
+            // Prayer time reached — recalculate
+            clearInterval(this.state.countdownTimer);
             this._calculatePrayerTimes();
             return;
         }
-        const totalMins = Math.floor(diff / 60000);
-        const h = Math.floor(totalMins / 60), m = totalMins % 60;
+
+        const totalSec = Math.floor(diff / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+
         const el = document.getElementById('time-remaining');
-        if (el) el.textContent = h > 0 ? `باقي ${h}س ${m}د` : `باقي ${m} دقيقة`;
+        if (el) {
+            el.textContent = h > 0
+                ? `باقي ${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                : `باقي ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Daily Reset =====
-    // ============================================================
+    // ------------------------------------------
     _checkDayReset() {
         const today = new Date().toDateString();
         if (this.state.lastReadingDate !== today) {
@@ -369,9 +374,9 @@ class RamadanApp {
         });
     }
 
-    // ============================================================
-    // ===== Quran Prayer Reading Toggle =====
-    // ============================================================
+    // ------------------------------------------
+    // ===== Quran Reading Toggle =====
+    // ------------------------------------------
     _togglePrayerRead(prayer) {
         const row = document.querySelector(`.prayer-row[data-prayer="${prayer}"]`);
         const isChecked = this.state.dailyReading[prayer];
@@ -379,88 +384,195 @@ class RamadanApp {
         if (!isChecked) {
             this.state.dailyReading[prayer] = true;
             if (row) row.classList.add('checked');
-            // Check if all 5 prayers done today
-            const allDone = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].every(p => this.state.dailyReading[p]);
-            if (allDone) {
-                this._triggerCelebration('ما شاء الله! أتممت قراءتك لهذا اليوم كاملاً! 🎉');
+            localStorage.setItem('dailyReading', JSON.stringify(this.state.dailyReading));
+
+            // Check if ALL 5 prayers are done today
+            const all5Done = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].every(p => this.state.dailyReading[p]);
+
+            if (all5Done) {
+                // Auto-mark next incomplete juz
+                this._autoMarkNextJuz();
             } else {
-                this._triggerCelebration(`أحسنت! 🌟 تقبّل الله قراءتك`);
+                this._triggerCelebration(`أحسنت! 🌟 تسجّلت قراءة ${this._prayerName(prayer)}`);
             }
         } else {
             this.state.dailyReading[prayer] = false;
             if (row) row.classList.remove('checked');
+            localStorage.setItem('dailyReading', JSON.stringify(this.state.dailyReading));
         }
-        localStorage.setItem('dailyReading', JSON.stringify(this.state.dailyReading));
     }
 
-    // ============================================================
-    // ===== Celebration & Duaa Popup =====
-    // ============================================================
-    _triggerCelebration(msg) {
-        // Confetti
-        if (window.confetti) {
-            const end = Date.now() + 2000;
-            const rand = (a, b) => Math.random() * (b - a) + a;
-            const loop = setInterval(() => {
-                if (Date.now() > end) return clearInterval(loop);
-                const n = 50 * ((end - Date.now()) / 2000);
-                confetti({ particleCount: n, startVelocity: 30, spread: 360, origin: { x: rand(0.1, 0.3), y: rand(0, 0.5) }, zIndex: 9999 });
-                confetti({ particleCount: n, startVelocity: 30, spread: 360, origin: { x: rand(0.7, 0.9), y: rand(0, 0.5) }, zIndex: 9999 });
-            }, 250);
-        }
-
-        // Pick random duaa
-        if (this.duaaData.length > 0) {
-            const d = this.duaaData[Math.floor(Math.random() * this.duaaData.length)];
-            const el = document.getElementById('reward-duaa');
-            if (el) el.textContent = d.arabic;
-        }
-
-        const msgEl = document.getElementById('celebration-message');
-        if (msgEl) msgEl.textContent = msg;
-
-        const modal = document.getElementById('celebration-modal');
-        setTimeout(() => { if (modal) modal.style.display = 'flex'; }, 500);
+    _prayerName(p) {
+        return { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' }[p] || p;
     }
 
-    closeCelebration() {
-        const modal = document.getElementById('celebration-modal');
+    _autoMarkNextJuz() {
+        // Find next incomplete juz
+        let nextJuz = null;
+        for (let i = 1; i <= 30; i++) {
+            if (!this.state.completedJuz.includes(i)) { nextJuz = i; break; }
+        }
+
+        if (nextJuz === null) {
+            // All juz completed → Full khatma!
+            this._triggerCelebration('🎊 ما شاء الله! أتممت ختمة القرآن الكريم كاملاً! تقبل الله منك 🌙');
+            return;
+        }
+
+        this.state.completedJuz.push(nextJuz);
+        localStorage.setItem('completedJuz', JSON.stringify(this.state.completedJuz));
+        this._renderJuzGrid();
+
+        if (this.state.completedJuz.length === 30) {
+            // Second khatma check (all 30 done now)
+            setTimeout(() => this._triggerCelebration('🎊 ما شاء الله! أتممت ختمة القرآن كاملاً! تقبل الله منك 🌙'), 800);
+        } else {
+            this._triggerCelebration(`ما شاء الله! 🎉 تم تسجيل الجزء ${nextJuz} تلقائياً - رزقك الله الختمة كاملة!`);
+        }
+    }
+
+    // ------------------------------------------
+    // ===== Quran Viewer =====
+    // ------------------------------------------
+    _openQuranViewer(juzNum) {
+        juzNum = juzNum || this._getNextJuzToRead();
+        this.quranJuz = juzNum;
+        this.quranPage = JUZ_PAGES[juzNum - 1][0];
+        this._showQuranModal();
+    }
+
+    _getNextJuzToRead() {
+        for (let i = 1; i <= 30; i++) {
+            if (!this.state.completedJuz.includes(i)) return i;
+        }
+        return 1;
+    }
+
+    _showQuranModal() {
+        const modal = document.getElementById('quran-viewer-modal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        this._renderQuranPage();
+    }
+
+    closeQuranViewer() {
+        const modal = document.getElementById('quran-viewer-modal');
         if (modal) modal.style.display = 'none';
     }
 
-    // ============================================================
+    _renderQuranPage() {
+        const imgEl = document.getElementById('quran-page-img');
+        const infoEl = document.getElementById('quran-page-info');
+        const juzInfo = JUZ_PAGES[this.quranJuz - 1];
+        const pageNum = this.quranPage;
+
+        if (infoEl) {
+            infoEl.textContent = `الجزء ${this.quranJuz} | صفحة ${pageNum} من ${juzInfo[1]}`;
+        }
+
+        if (imgEl) {
+            imgEl.src = '';
+            imgEl.style.opacity = '0.3';
+            imgEl.alt = `صفحة ${pageNum}`;
+            const url = `https://cdn.islamic.network/quran/images/page${pageNum}.png`;
+            const tmp = new Image();
+            tmp.onload = () => { imgEl.src = url; imgEl.style.opacity = '1'; };
+            tmp.onerror = () => {
+                // Fallback URL
+                imgEl.src = `https://qurancdn.com/images/page_${pageNum}.png`;
+                imgEl.style.opacity = '1';
+            };
+            tmp.src = url;
+        }
+
+        // Update navigation buttons
+        const juzStart = JUZ_PAGES[this.quranJuz - 1][0];
+        const juzEnd = JUZ_PAGES[this.quranJuz - 1][1];
+        const prevBtn = document.getElementById('qv-prev');
+        const nextBtn = document.getElementById('qv-next');
+        if (prevBtn) prevBtn.disabled = (pageNum <= juzStart);
+        if (nextBtn) nextBtn.disabled = (pageNum >= juzEnd);
+    }
+
+    quranPrevPage() {
+        const juzStart = JUZ_PAGES[this.quranJuz - 1][0];
+        if (this.quranPage > juzStart) { this.quranPage--; this._renderQuranPage(); }
+    }
+
+    quranNextPage() {
+        const juzEnd = JUZ_PAGES[this.quranJuz - 1][1];
+        if (this.quranPage < juzEnd) { this.quranPage++; this._renderQuranPage(); }
+    }
+
+    // ------------------------------------------
     // ===== Azkar =====
-    // ============================================================
+    // ------------------------------------------
     renderAzkar(type) {
-        this.state.currentAzkarType = type;
         const list = document.getElementById('azkar-list');
         if (!list) return;
         list.innerHTML = '';
 
-        const data = azkarData[type] || azkarData.morning;
-        data.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'azkar-card';
-            card.innerHTML = `
+        (AZKAR_DATA[type] || AZKAR_DATA.morning).forEach(item => {
+            const c = document.createElement('div');
+            c.className = 'azkar-card';
+            c.innerHTML = `
                 <p class="arabic-text">${item.arabic}</p>
                 ${item.count > 1 ? `<span class="count-badge"><i class="fa-solid fa-rotate-right"></i> ${item.count} مرة</span>` : ''}
                 <br>
                 <span class="source-text"><i class="fa-solid fa-book-open-reader"></i> ${item.source}</span>
             `;
-            list.appendChild(card);
+            list.appendChild(c);
         });
 
-        // Update tab active state
-        const tabs = document.querySelectorAll('.tab-btn');
-        const tabMap = { morning: 0, evening: 1, prayer: 2 };
-        tabs.forEach((t, i) => {
-            t.classList.toggle('active', i === tabMap[type]);
+        document.querySelectorAll('.tab-btn').forEach((t, i) => {
+            t.classList.toggle('active', i === { morning: 0, evening: 1, prayer: 2 }[type]);
         });
     }
 
-    // ============================================================
-    // ===== Tasbeeh =====
-    // ============================================================
+    // ------------------------------------------
+    // ===== Tasbeeh Azkar Selector =====
+    // ------------------------------------------
+    _renderTasbeehAzkarSelector() {
+        const container = document.getElementById('azkar-selector-list');
+        if (!container) return;
+        container.innerHTML = '';
+        AZKAR_OPTIONS.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'azkar-chip' + (i === this.state.selectedAzkar ? ' active' : '');
+            btn.textContent = opt.label;
+            btn.onclick = () => this._selectAzkar(i);
+            container.appendChild(btn);
+        });
+        this._updateTasbeehArabicDisplay();
+    }
+
+    _selectAzkar(index) {
+        this.state.selectedAzkar = index;
+        localStorage.setItem('selectedAzkar', index);
+        // Reset count for new azkar type
+        this.state.tasbeehCount = 0;
+        localStorage.setItem('tasbeehCount', 0);
+        this._updateTasbeehDisplay();
+        // Update chips
+        document.querySelectorAll('.azkar-chip').forEach((c, i) => {
+            c.classList.toggle('active', i === index);
+        });
+        this._updateTasbeehArabicDisplay();
+        const label = document.getElementById('tasbeeh-label');
+        if (label) label.textContent = 'ابدأ الآن';
+    }
+
+    _updateTasbeehArabicDisplay() {
+        const el = document.getElementById('tasbeeh-arabic-display');
+        const opt = AZKAR_OPTIONS[this.state.selectedAzkar];
+        if (el && opt) {
+            el.textContent = opt.arabic;
+        }
+    }
+
+    // ------------------------------------------
+    // ===== Tasbeeh Counter =====
+    // ------------------------------------------
     _incrementTasbeeh() {
         this.state.tasbeehCount++;
         localStorage.setItem('tasbeehCount', this.state.tasbeehCount);
@@ -468,14 +580,18 @@ class RamadanApp {
         if (navigator.vibrate) navigator.vibrate(40);
         if (this.state.soundEnabled) this._playBeep();
 
-        // Milestones
-        const n = this.state.tasbeehCount;
-        const labels = { 33: 'سبحان الله', 66: 'الحمد لله', 99: 'الله أكبر', 100: 'لا إله إلا الله وحده لا شريك له' };
+        const opt = AZKAR_OPTIONS[this.state.selectedAzkar];
+        const milestone = opt ? opt.milestone : 33;
+        const count = this.state.tasbeehCount;
         const label = document.getElementById('tasbeeh-label');
-        if (n === 33) { if (label) label.textContent = '✨ سبحان الله - استمر!'; this._triggerCelebration('الحمد لله! 33 تسبيحة 🌿'); }
-        else if (n === 66) { if (label) label.textContent = '✨ الحمد لله - استمر!'; this._triggerCelebration('أحسنت! 66 تسبيحة 🌿'); }
-        else if (n === 99) { if (label) label.textContent = '✨ الله أكبر - وأتم بالتحليل!'; this._triggerCelebration('ما شاء الله! أتممت التسبيحات 🎊'); }
-        else { if (label) label.textContent = n < 33 ? `${33 - n} للتسبيحة` : (n < 66 ? `${66 - n} للتحميدة` : (n < 99 ? `${99 - n} للتكبيرة` : '')); }
+
+        if (count % milestone === 0) {
+            this._triggerCelebration(`ما شاء الله! 🌿 أتممت ${count} مرة من ${opt.label}`);
+            if (label) label.textContent = `✨ ${count} - أحسنت!`;
+        } else {
+            const rem = milestone - (count % milestone);
+            if (label) label.textContent = `${rem} للوصول لـ ${milestone}`;
+        }
     }
 
     _playBeep() {
@@ -485,12 +601,10 @@ class RamadanApp {
             const ctx = new AC();
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
-            osc.connect(g);
-            g.connect(ctx.destination);
+            osc.connect(g); g.connect(ctx.destination);
             osc.frequency.value = 880;
             g.gain.value = 0.04;
-            osc.start();
-            setTimeout(() => { osc.stop(); ctx.close(); }, 60);
+            osc.start(); setTimeout(() => { osc.stop(); ctx.close(); }, 60);
         } catch (e) { }
     }
 
@@ -517,25 +631,23 @@ class RamadanApp {
             : '<i class="fa-solid fa-volume-xmark"></i>';
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Quran Planner =====
-    // ============================================================
+    // ------------------------------------------
     _updateQuranPlanner() {
         const goal = this.state.khatmaGoal;
-        const pagesPerDay = Math.ceil((604 * goal) / 30);
-        const ppp = Math.ceil(pagesPerDay / 5);
-
+        const pagesDay = Math.ceil((604 * goal) / 30);
+        const perPrayer = Math.ceil(pagesDay / 5);
         const $ = id => document.getElementById(id);
-        if ($('daily-pages')) $('daily-pages').textContent = pagesPerDay;
+        if ($('daily-pages')) $('daily-pages').textContent = pagesDay;
         if ($('khatma-goal-display')) $('khatma-goal-display').textContent = goal;
         ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(p => {
-            if ($(`pages-${p}`)) $(`pages-${p}`).textContent = `${ppp} ص`;
+            if ($(`pages-${p}`)) $(`pages-${p}`).textContent = `${perPrayer} ص`;
         });
     }
 
     _adjustGoal(n) {
-        let g = this.state.khatmaGoal + n;
-        g = Math.max(1, Math.min(10, g));
+        let g = Math.max(1, Math.min(10, this.state.khatmaGoal + n));
         this.state.khatmaGoal = g;
         localStorage.setItem('khatmaGoal', g);
         this._updateQuranPlanner();
@@ -546,27 +658,17 @@ class RamadanApp {
         if (!grid) return;
         grid.innerHTML = '';
         for (let i = 1; i <= 30; i++) {
+            const done = this.state.completedJuz.includes(i);
             const box = document.createElement('div');
-            box.className = 'juz-box' + (this.state.completedJuz.includes(i) ? ' completed' : '');
-            box.textContent = i;
-            box.title = `الجزء ${i}`;
-            box.addEventListener('click', () => this._toggleJuz(i));
+            box.className = 'juz-box' + (done ? ' completed' : '');
+            box.innerHTML = done
+                ? `<i class="fa-solid fa-check" style="font-size:0.8rem;"></i><small>${i}</small>`
+                : `${i}`;
+            box.title = `الجزء ${i} - اضغط لفتح صفحاته`;
+            box.addEventListener('click', () => this._openQuranViewer(i));
             grid.appendChild(box);
         }
         this._updateHomeProgress();
-    }
-
-    _toggleJuz(num) {
-        if (this.state.completedJuz.includes(num)) {
-            this.state.completedJuz = this.state.completedJuz.filter(j => j !== num);
-        } else {
-            this.state.completedJuz.push(num);
-            if (this.state.completedJuz.length === 30) {
-                this._triggerCelebration('🎊 ما شاء الله! أتممت ختمة القرآن الكريم! تقبل الله منك 🌙');
-            }
-        }
-        localStorage.setItem('completedJuz', JSON.stringify(this.state.completedJuz));
-        this._renderJuzGrid();
     }
 
     _updateHomeProgress() {
@@ -582,9 +684,45 @@ class RamadanApp {
         if (el) el.textContent = `${done} جزء`;
     }
 
-    // ============================================================
+    // ------------------------------------------
+    // ===== Celebration =====
+    // ------------------------------------------
+    _triggerCelebration(msg) {
+        if (window.confetti) {
+            const end = Date.now() + 2000;
+            const r = (a, b) => Math.random() * (b - a) + a;
+            const id = setInterval(() => {
+                if (Date.now() > end) return clearInterval(id);
+                const n = 40;
+                confetti({ particleCount: n, startVelocity: 30, spread: 360, origin: { x: r(0.1, 0.3), y: r(0, 0.5) }, zIndex: 9999 });
+                confetti({ particleCount: n, startVelocity: 30, spread: 360, origin: { x: r(0.7, 0.9), y: r(0, 0.5) }, zIndex: 9999 });
+            }, 250);
+        }
+
+        // Show random duaa
+        if (this.duaaData.length > 0) {
+            const d = this.duaaData[Math.floor(Math.random() * this.duaaData.length)];
+            const el = document.getElementById('reward-duaa');
+            if (el) el.textContent = d.arabic;
+        }
+
+        const msgEl = document.getElementById('celebration-message');
+        if (msgEl) msgEl.textContent = msg;
+
+        setTimeout(() => {
+            const modal = document.getElementById('celebration-modal');
+            if (modal) modal.style.display = 'flex';
+        }, 400);
+    }
+
+    closeCelebration() {
+        const m = document.getElementById('celebration-modal');
+        if (m) m.style.display = 'none';
+    }
+
+    // ------------------------------------------
     // ===== Duaa =====
-    // ============================================================
+    // ------------------------------------------
     async _loadDuaa() {
         try {
             const res = await fetch('douaa/adkar.json');
@@ -605,31 +743,29 @@ class RamadanApp {
         if (!list) return;
         list.innerHTML = '';
         this.duaaData.forEach(d => {
-            const card = document.createElement('div');
-            card.className = 'duaa-card';
-            card.innerHTML = `
+            const c = document.createElement('div');
+            c.className = 'duaa-card';
+            c.innerHTML = `
                 <h3 class="duaa-title">${d.title}</h3>
                 <p class="arabic-text">${d.arabic}</p>
                 ${d.translation ? `<p class="translation-text">${d.translation}</p>` : ''}
                 <span class="source-text"><i class="fa-solid fa-book-open-reader"></i> ${d.source}</span>
             `;
-            list.appendChild(card);
+            list.appendChild(c);
         });
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Notifications =====
-    // ============================================================
+    // ------------------------------------------
     async _requestNotifPermission() {
         if (!('Notification' in window)) return;
-        if (Notification.permission === 'default') {
-            await Notification.requestPermission();
-        }
+        if (Notification.permission === 'default') await Notification.requestPermission();
     }
 
-    _setNotifInterval(minutes) {
-        this.state.notifInterval = minutes;
-        localStorage.setItem('notifInterval', minutes);
+    _setNotifInterval(min) {
+        this.state.notifInterval = min;
+        localStorage.setItem('notifInterval', min);
         this._requestNotifPermission();
         this._startNotifTimer();
     }
@@ -639,39 +775,31 @@ class RamadanApp {
         if (this.state.notifInterval > 0) {
             this.state.intervalId = setInterval(() => {
                 this._sendNotif('تذكير بالأذكار 🤲', 'ألا بذكر الله تطمئن القلوب. رطب لسانك بذكر الله.');
-            }, this.state.notifInterval * 60 * 1000);
+            }, this.state.notifInterval * 60000);
         }
     }
 
     _sendNotif(title, body) {
         if (Notification.permission !== 'granted') return;
-        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-            navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, vibrate: [200, 100, 200] }));
-        } else {
-            new Notification(title, { body });
-        }
+        try { new Notification(title, { body }); } catch (e) { }
     }
 
-    // ============================================================
+    // ------------------------------------------
     // ===== Hijri Date =====
-    // ============================================================
+    // ------------------------------------------
     _updateHijriDate() {
         const el = document.getElementById('hijri-date');
         if (!el) return;
         try {
-            const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+            el.textContent = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
                 day: 'numeric', month: 'long', year: 'numeric'
             }).format(new Date());
-            el.textContent = hijri;
-        } catch {
-            el.textContent = 'رمضان 1447 هـ';
-        }
+        } catch { el.textContent = 'رمضان 1447 هـ'; }
     }
 }
 
-// ===== Initialize =====
+// ==========================================
+// ===== Init =====
+// ==========================================
 const app = new RamadanApp();
 window.app = app;
-
-// ===== Global onclick helpers (must be at window scope) =====
-window.navigate = (s) => app._navigate(s);

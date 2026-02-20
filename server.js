@@ -88,9 +88,26 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Serve douaa folder (root-level) - PDF file
+// Serve douaa folder
 app.use('/douaa', express.static(path.join(__dirname, 'douaa')));
 app.use('/douaa', express.static(path.join(__dirname, 'public', 'douaa')));
+
+// Clean route for downloading the duaa PDF (avoids URL encoding issues with Arabic filename)
+app.get('/adkar-pdf', (req, res) => {
+    const pdfDir = path.join(__dirname, 'douaa');
+    const fs = require('fs');
+    try {
+        const files = fs.readdirSync(pdfDir);
+        const pdfFile = files.find(f => f.endsWith('.pdf'));
+        if (pdfFile) {
+            res.download(path.join(pdfDir, pdfFile), 'ادعية-رمضان.pdf');
+        } else {
+            res.status(404).json({ success: false, msg: 'ملف PDF غير موجود' });
+        }
+    } catch (e) {
+        res.status(500).json({ success: false, msg: 'خطأ في الخادم' });
+    }
+});
 
 // ===== Register =====
 app.post('/register', async (req, res) => {
