@@ -6,6 +6,11 @@ const toggleQuestion = document.getElementById('toggle-question');
 const errorMsg = document.getElementById('error-msg');
 const successMsg = document.getElementById('success-msg');
 
+// --- Auto-Redirect if Already Logged In ---
+if (localStorage.getItem('username')) {
+    window.location.href = 'index.html';
+}
+
 let isLogin = true;
 const API_URL = ''; // Use relative path for production
 

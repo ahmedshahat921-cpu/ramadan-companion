@@ -50,14 +50,8 @@ app.use(async (req, res, next) => {
 // Register
 app.post('/register', async (req, res) => {
     try {
-        // Enforce Single User Policy
-        const userCount = await User.countDocuments();
-        if (userCount > 0) {
-            return res.status(400).json({ msg: 'التسجيل مغلق: يوجد مستخدم مسجل بالفعل' });
-        }
-
         const { username, password } = req.body;
-        // Check if user exists (redundant but safe)
+        // Check if user exists
         let user = await User.findOne({ username });
         if (user) {
             return res.status(400).json({ msg: 'User already exists' });
