@@ -311,14 +311,31 @@ class RamadanApp {
                 ).join('') + '</div>';
         }
 
-        // Next prayer
+        // Next prayer — handle 'none' (after Isha: get tomorrow's Fajr)
         const next = pt.nextPrayer();
-        const nextTime = (next && next !== 'none') ? pt.timeForPrayer(next) : null;
+        let nextTime = null;
+        let nextName = 'الفجر';
+        let nextEmoji = '🌅';
+
+        if (next && next !== 'none') {
+            nextTime = pt.timeForPrayer(next);
+            nextName = ARABIC[next] || 'الفجر';
+            nextEmoji = EMOJIS[next] || '🌅';
+        } else {
+            // After Isha — calculate tomorrow's Fajr
+            const tomorrow = new Date(date);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const ptTomorrow = new adhan.PrayerTimes(coords, tomorrow, params);
+            nextTime = ptTomorrow.fajr;
+            nextName = 'الفجر (غداً)';
+            nextEmoji = '🌅';
+        }
+
         this.state._nextPrayerTime = nextTime;
 
         const nameEl = document.getElementById('next-prayer-name');
         const timeEl = document.getElementById('next-prayer-time');
-        if (nameEl) nameEl.textContent = (EMOJIS[next] || '') + ' ' + (ARABIC[next] || 'الفجر');
+        if (nameEl) nameEl.textContent = `${nextEmoji} ${nextName}`;
         if (timeEl && nextTime) timeEl.textContent = fmt(nextTime);
 
         // Start countdown
@@ -414,7 +431,7 @@ class RamadanApp {
         }
 
         if (nextJuz === null) {
-            // All juz completed → Full khatma!
+            // All already completed → khatma celebration
             this._triggerCelebration('🎊 ما شاء الله! أتممت ختمة القرآن الكريم كاملاً! تقبل الله منك 🌙');
             return;
         }
@@ -423,12 +440,13 @@ class RamadanApp {
         localStorage.setItem('completedJuz', JSON.stringify(this.state.completedJuz));
         this._renderJuzGrid();
 
-        if (this.state.completedJuz.length === 30) {
-            // Second khatma check (all 30 done now)
-            setTimeout(() => this._triggerCelebration('🎊 ما شاء الله! أتممت ختمة القرآن كاملاً! تقبل الله منك 🌙'), 800);
-        } else {
-            this._triggerCelebration(`ما شاء الله! 🎉 تم تسجيل الجزء ${nextJuz} تلقائياً - رزقك الله الختمة كاملة!`);
-        }
+        const isKhatma = this.state.completedJuz.length === 30;
+        const msg = isKhatma
+            ? '🎊 ما شاء الله! أتممت ختمة القرآن الكريم كاملاً! تقبل الله منك 🌙'
+            : `ما شاء الله! 🎉 أتممت الجزء ${nextJuz} بإتمام قراءة يومك - رزقك الله الختمة كاملة!`;
+
+        // Always show celebration — delay slightly to let juz grid render first
+        setTimeout(() => this._triggerCelebration(msg), 500);
     }
 
     // ------------------------------------------
@@ -465,24 +483,43 @@ class RamadanApp {
         const infoEl = document.getElementById('quran-page-info');
         const juzInfo = JUZ_PAGES[this.quranJuz - 1];
         const pageNum = this.quranPage;
+        const padded = String(pageNum).padStart(3, '0');
 
         if (infoEl) {
             infoEl.textContent = `الجزء ${this.quranJuz} | صفحة ${pageNum} من ${juzInfo[1]}`;
         }
 
+        // Chain of CDN sources to try (4 fallbacks)
+        const SOURCES = [
+            `https://qurancdn.com/images/q/${padded}.jpg`,
+            `https://cdn.islamic.network/quran/images/high-resolution/${pageNum}.png`,
+            `https://quran-images.s3.eu-west-1.amazonaws.com/hafs/${pageNum}.png`,
+            `https://quran.ksu.edu.sa/images/q/${padded}.jpg`,
+        ];
+
         if (imgEl) {
             imgEl.src = '';
             imgEl.style.opacity = '0.3';
-            imgEl.alt = `صفحة ${pageNum}`;
-            const url = `https://cdn.islamic.network/quran/images/page${pageNum}.png`;
-            const tmp = new Image();
-            tmp.onload = () => { imgEl.src = url; imgEl.style.opacity = '1'; };
-            tmp.onerror = () => {
-                // Fallback URL
-                imgEl.src = `https://qurancdn.com/images/page_${pageNum}.png`;
-                imgEl.style.opacity = '1';
+            imgEl.alt = `صفحة ${pageNum}  `;
+
+            let srcIndex = 0;
+
+            const tryLoad = () => {
+                if (srcIndex >= SOURCES.length) {
+                    // All CDNs failed — show text fallback
+                    imgEl.style.display = 'none';
+                    const fb = document.getElementById('quran-text-fallback');
+                    if (fb) { fb.style.display = 'block'; fb.innerHTML = `<p style="text-align:center;padding:20px;opacity:0.7;">⚠️ تعذّر تحميل الصورة.<br><a href="https://quran.com/page/${pageNum}" target="_blank" style="color:#10B981;">افتح الصفحة ${pageNum} على Quran.com</a></p>`; }
+                    return;
+                }
+                const url = SOURCES[srcIndex];
+                const tmp = new Image();
+                tmp.onload = () => { imgEl.src = url; imgEl.style.opacity = '1'; imgEl.style.display = 'block'; };
+                tmp.onerror = () => { srcIndex++; tryLoad(); };
+                tmp.src = url;
             };
-            tmp.src = url;
+
+            tryLoad();
         }
 
         // Update navigation buttons
