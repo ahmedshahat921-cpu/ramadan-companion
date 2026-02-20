@@ -75,6 +75,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Serve douaa folder (root-level) - PDF file
+app.use('/douaa', express.static(path.join(__dirname, 'douaa')));
+app.use('/douaa', express.static(path.join(__dirname, 'public', 'douaa')));
+
 // ===== Register =====
 app.post('/register', async (req, res) => {
     try {

@@ -11,62 +11,118 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <style>
-        /* ===== Auth Page Styles ===== */
-        .auth-page-bg {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: linear-gradient(160deg, #0f172a 0%, #1e2d3d 50%, #0d2118 100%);
+            background: linear-gradient(155deg, #0f172a 0%, #1a2d3a 50%, #0d2118 100%);
             position: relative;
             overflow: hidden;
         }
 
-        .auth-page-bg::before {
+        /* Decorative circles */
+        body::before {
             content: '';
-            position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            position: fixed;
+            top: -120px;
+            right: -120px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, transparent 65%);
             border-radius: 50%;
+            pointer-events: none;
         }
 
-        .auth-page-bg::after {
+        body::after {
             content: '';
-            position: absolute;
+            position: fixed;
             bottom: -80px;
             left: -80px;
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 65%);
             border-radius: 50%;
+            pointer-events: none;
         }
 
+        /* ===== Top Bar ===== */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            z-index: 100;
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #10B981;
+            font-family: 'Amiri', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .app-brand i {
+            font-size: 1.3rem;
+        }
+
+        .theme-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.25s;
+        }
+
+        .theme-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #f8fafc;
+        }
+
+        /* ===== Card ===== */
         .auth-card {
-            background: rgba(30, 41, 59, 0.95);
-            padding: 35px 30px;
+            background: rgba(30, 41, 59, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            padding: 36px 28px;
             border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
             width: 100%;
             max-width: 400px;
-            text-align: center;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
             position: relative;
             z-index: 1;
-            animation: fadeIn 0.5s ease;
+            animation: slideUp 0.5s ease;
         }
 
-        @keyframes fadeIn {
+        @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
 
             to {
@@ -75,51 +131,110 @@
             }
         }
 
-        .auth-logo-wrap {
-            width: 75px;
-            height: 75px;
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-8px);
+            }
+
+            40% {
+                transform: translateX(8px);
+            }
+
+            60% {
+                transform: translateX(-5px);
+            }
+
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Logo */
+        .logo-wrap {
+            width: 76px;
+            height: 76px;
             background: linear-gradient(135deg, #10B981, #059669);
             border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+            margin: 0 auto 18px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
-        .auth-logo-wrap i {
-            font-size: 2.2rem;
+        .logo-wrap i {
+            font-size: 2rem;
             color: white;
         }
 
-        .auth-title {
+        .card-title {
             font-family: 'Amiri', serif;
             font-size: 1.9rem;
             font-weight: 700;
-            margin-bottom: 5px;
             color: #f8fafc;
+            text-align: center;
+            margin-bottom: 4px;
         }
 
-        .auth-subtitle {
+        .card-subtitle {
+            text-align: center;
             font-size: 0.9rem;
             color: #64748b;
-            margin-bottom: 28px;
+            margin-bottom: 26px;
         }
 
-        .form-group {
-            margin-bottom: 18px;
+        /* Messages */
+        .error-msg {
+            color: #fca5a5;
+            font-size: 0.92rem;
+            display: none;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 14px;
             text-align: right;
         }
 
+        .success-msg {
+            color: #6ee7b7;
+            font-size: 0.92rem;
+            display: none;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            text-align: right;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
         .form-group label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 7px;
             margin-bottom: 8px;
             font-size: 0.95rem;
             color: #94a3b8;
             font-weight: 600;
         }
 
-        .input-wrapper {
+        .form-group label i {
+            color: #10B981;
+            font-size: 0.85rem;
+        }
+
+        .input-wrap {
             position: relative;
         }
 
@@ -130,10 +245,11 @@
             border: 1.5px solid rgba(255, 255, 255, 0.08);
             background: rgba(255, 255, 255, 0.05);
             color: #f8fafc;
-            font-family: 'Cairo', sans-serif;
             font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
             transition: border-color 0.3s, box-shadow 0.3s;
             text-align: right;
+            direction: rtl;
         }
 
         .form-group input::placeholder {
@@ -145,40 +261,41 @@
             outline: none;
             border-color: #10B981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-            background: rgba(16, 185, 129, 0.05);
+            background: rgba(16, 185, 129, 0.06);
         }
 
-        /* ===== Eye Icon for Password ===== */
-        .toggle-password-btn {
+        /* Password input needs left padding for eye icon */
+        #password {
+            padding-left: 46px;
+        }
+
+        /* ===== Eye Button ===== */
+        #eye-btn {
             position: absolute;
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            cursor: pointer;
             color: #64748b;
-            font-size: 1.05rem;
-            padding: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 6px;
             border-radius: 6px;
-            transition: color 0.2s;
-            z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: color 0.2s;
+            z-index: 5;
+            line-height: 1;
         }
 
-        .toggle-password-btn:hover {
+        #eye-btn:hover {
             color: #10B981;
         }
 
-        .form-group input[type="password"],
-        .form-group input[type="text"] {
-            padding-left: 45px;
-            /* space for eye icon */
-        }
-
-        .auth-btn {
+        /* Submit Button */
+        #submit-btn {
             width: 100%;
             padding: 14px;
             border-radius: 12px;
@@ -188,213 +305,157 @@
             font-size: 1.05rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 8px;
             font-family: 'Cairo', sans-serif;
-            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            margin-top: 8px;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.35);
+            transition: all 0.3s;
         }
 
-        .auth-btn:hover {
+        #submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 8px 28px rgba(16, 185, 129, 0.45);
         }
 
-        .auth-btn:active {
-            transform: translateY(0);
+        #submit-btn:disabled {
+            opacity: 0.72;
+            cursor: not-allowed;
         }
 
+        /* Toggle */
         .toggle-text {
-            margin-top: 22px;
+            margin-top: 20px;
+            text-align: center;
             font-size: 0.95rem;
             color: #64748b;
         }
 
-        .toggle-link {
+        #toggle-link {
             color: #10B981;
             cursor: pointer;
             font-weight: 700;
-            text-decoration: none;
             margin-right: 4px;
             transition: color 0.2s;
         }
 
-        .toggle-link:hover {
+        #toggle-link:hover {
             color: #34d399;
             text-decoration: underline;
-        }
-
-        .error-msg {
-            color: #f87171;
-            margin-bottom: 14px;
-            font-size: 0.92rem;
-            display: none;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            text-align: right;
-        }
-
-        .success-msg {
-            color: #34d399;
-            margin-bottom: 14px;
-            font-size: 0.92rem;
-            display: none;
-            background: rgba(16, 185, 129, 0.1);
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            text-align: right;
-        }
-
-        /* Theme toggle in corner */
-        .theme-corner {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.08);
-            border: none;
-            color: #94a3b8;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-
-        .theme-corner:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #f8fafc;
-        }
-
-        .app-name {
-            position: absolute;
-            top: 22px;
-            right: 20px;
-            color: #10B981;
-            font-family: 'Amiri', serif;
-            font-size: 1.2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 10;
         }
     </style>
 </head>
 
-<body class="dark-mode">
-    <div class="auth-page-bg">
-        <!-- App Name -->
-        <div class="app-name">
-            <i class="fa-solid fa-moon"></i>
-            رفيق رمضان
-        </div>
-
-        <!-- Theme Toggle -->
-        <button id="theme-toggle" class="theme-corner" aria-label="تغيير المظهر">
-            <i class="fa-solid fa-sun"></i>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <button class="theme-btn" id="theme-btn" title="تغيير المظهر">
+            <i class="fa-solid fa-sun" id="theme-icon"></i>
         </button>
-
-        <div class="auth-card">
-            <!-- Logo -->
-            <div class="auth-logo-wrap">
-                <i class="fa-solid fa-mosque"></i>
-            </div>
-
-            <h2 id="form-title" class="auth-title">تسجيل الدخول</h2>
-            <p class="auth-subtitle">أهلاً بك في رفيق رمضان 🌙</p>
-
-            <!-- Messages -->
-            <div id="error-msg" class="error-msg"></div>
-            <div id="success-msg" class="success-msg"></div>
-
-            <form id="auth-form">
-                <!-- Username -->
-                <div class="form-group">
-                    <label for="username">
-                        <i class="fa-solid fa-user" style="margin-left:6px; color:#10B981;"></i>
-                        اسم المستخدم
-                    </label>
-                    <input type="text" id="username" required placeholder="ادخل اسم المستخدم" autocomplete="username">
-                </div>
-
-                <!-- Password -->
-                <div class="form-group">
-                    <label for="password">
-                        <i class="fa-solid fa-lock" style="margin-left:6px; color:#10B981;"></i>
-                        كلمة المرور
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="password" id="password" placeholder="كلمة المرور" required
-                            autocomplete="current-password">
-                        <button type="button" class="toggle-password-btn" id="toggle-password"
-                            aria-label="إظهار/إخفاء كلمة المرور">
-                            <i class="fa-solid fa-eye" id="eye-icon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="auth-btn" id="submit-btn">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    دخول
-                </button>
-            </form>
-
-            <p class="toggle-text">
-                <span id="toggle-question">ليس لديك حساب؟</span>
-                <span id="toggle-link" class="toggle-link">إنشاء حساب جديد</span>
-            </p>
+        <div class="app-brand">
+            رفيق رمضان
+            <i class="fa-solid fa-moon"></i>
         </div>
     </div>
 
+    <!-- Auth Card -->
+    <div class="auth-card">
+        <div class="logo-wrap">
+            <i class="fa-solid fa-mosque"></i>
+        </div>
+
+        <h1 id="form-title" class="card-title">تسجيل الدخول</h1>
+        <p class="card-subtitle">أهلاً بك في رفيق رمضان 🌙</p>
+
+        <div id="error-msg" class="error-msg"></div>
+        <div id="success-msg" class="success-msg"></div>
+
+        <form id="auth-form" novalidate>
+            <!-- Username -->
+            <div class="form-group">
+                <label for="username">
+                    <i class="fa-solid fa-user"></i>
+                    اسم المستخدم
+                </label>
+                <input type="text" id="username" placeholder="ادخل اسم المستخدم" autocomplete="username" required>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password">
+                    <i class="fa-solid fa-lock"></i>
+                    كلمة المرور
+                </label>
+                <div class="input-wrap">
+                    <input type="password" id="password" placeholder="كلمة المرور (6 أحرف على الأقل)"
+                        autocomplete="current-password" required>
+                    <button type="button" id="eye-btn" aria-label="إظهار/إخفاء كلمة المرور">
+                        <i class="fa-solid fa-eye" id="eye-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                دخول
+            </button>
+        </form>
+
+        <p class="toggle-text">
+            <span id="toggle-question">ليس لديك حساب؟</span>
+            <span id="toggle-link">إنشاء حساب جديد</span>
+        </p>
+    </div>
+
+    <!-- Load auth logic AFTER DOM is ready -->
     <script src="auth.js"></script>
     <script>
-        // ===== Password Eye Toggle =====
-        const toggleBtn = document.getElementById('toggle-password');
+        // ===== Eye Icon Toggle =====
+        const eyeBtn = document.getElementById('eye-btn');
         const passInput = document.getElementById('password');
         const eyeIcon = document.getElementById('eye-icon');
 
-        toggleBtn.addEventListener('click', () => {
-            const isHidden = passInput.type === 'password';
-            passInput.type = isHidden ? 'text' : 'password';
-            eyeIcon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        eyeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password';
+            eyeIcon.className = isPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            passInput.focus();
         });
 
         // ===== Theme Toggle =====
-        const themeBtn = document.getElementById('theme-toggle');
-        const body = document.body;
-        const authCard = document.querySelector('.auth-card');
+        const themeBtn = document.getElementById('theme-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        let isDark = localStorage.getItem('theme') !== 'light';
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            body.classList.remove('dark-mode');
-            themeBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
-            document.querySelector('.auth-page-bg').style.background = 'linear-gradient(160deg, #ecfdf5 0%, #f0fdf4 100%)';
-            if (authCard) { authCard.style.background = 'rgba(255,255,255,0.95)'; authCard.style.color = '#1e293b'; }
+        function applyTheme() {
+            if (isDark) {
+                document.body.style.background = 'linear-gradient(155deg, #0f172a 0%, #1a2d3a 50%, #0d2118 100%)';
+                themeIcon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.style.background = 'linear-gradient(155deg, #e0fdf4 0%, #f0fdf4 50%, #dcfce7 100%)';
+                themeIcon.className = 'fa-solid fa-moon';
+            }
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Apply on load
+        if (localStorage.getItem('theme') === 'light') {
+            isDark = false;
+            applyTheme();
         }
 
         themeBtn.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+            isDark = !isDark;
+            applyTheme();
         });
 
         // ===== Service Worker =====
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => { });
-            });
+            navigator.serviceWorker.register('./sw.js').catch(() => { });
         }
     </script>
 </body>

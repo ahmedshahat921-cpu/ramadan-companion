@@ -6,18 +6,9 @@ const toggleLink = document.getElementById('toggle-link');
 const toggleQuestion = document.getElementById('toggle-question');
 const errorMsg = document.getElementById('error-msg');
 const successMsg = document.getElementById('success-msg');
-const togglePassword = document.getElementById('toggle-password');
-const passwordInput = document.getElementById('password');
 
-// ===== Password Visibility Toggle =====
-if (togglePassword && passwordInput) {
-    togglePassword.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        togglePassword.classList.toggle('fa-eye');
-        togglePassword.classList.toggle('fa-eye-slash');
-    });
-}
+// ===== Eye Icon Toggle (handled in login.html inline script) =====
+// NOTE: Do NOT add eye toggle here to avoid double-binding conflict
 
 // ===== Auto-Redirect if Already Logged In =====
 if (localStorage.getItem('username')) {
@@ -35,10 +26,17 @@ toggleLink.addEventListener('click', () => {
 });
 
 function updateUI() {
-    formTitle.innerText = isLogin ? 'تسجيل الدخول' : 'إنشاء حساب';
-    submitBtn.innerText = isLogin ? 'دخول' : 'تسجيل';
-    toggleQuestion.innerText = isLogin ? 'ليس لديك حساب؟' : 'لديك حساب بالفعل؟';
-    toggleLink.innerText = isLogin ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    if (isLogin) {
+        formTitle.innerText = 'تسجيل الدخول';
+        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> دخول';
+        toggleQuestion.innerText = 'ليس لديك حساب؟';
+        toggleLink.innerText = 'إنشاء حساب جديد';
+    } else {
+        formTitle.innerText = 'إنشاء حساب جديد';
+        submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> إنشاء حساب';
+        toggleQuestion.innerText = 'لديك حساب بالفعل؟';
+        toggleLink.innerText = 'تسجيل الدخول';
+    }
     hideMessages();
 }
 
@@ -97,14 +95,12 @@ authForm.addEventListener('submit', async (e) => {
 
         // ===== SUCCESS =====
         if (isLogin) {
-            // Save username and redirect
             localStorage.setItem('username', data.username);
-            showSuccess('تم تسجيل الدخول! جاري التحويل...');
+            showSuccess('✅ تم تسجيل الدخول! جاري التحويل...');
             setTimeout(() => {
                 window.location.href = 'index.html';
-            }, 800);
+            }, 700);
         } else {
-            // After register, switch to login mode
             showSuccess('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.');
             isLogin = true;
             updateUI();
@@ -122,13 +118,16 @@ authForm.addEventListener('submit', async (e) => {
 
 // ===== Helper Functions =====
 function showError(msg) {
-    errorMsg.innerText = msg;
+    errorMsg.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + msg;
     errorMsg.style.display = 'block';
     successMsg.style.display = 'none';
+    errorMsg.style.animation = 'none';
+    void errorMsg.offsetHeight;
+    errorMsg.style.animation = 'shake 0.4s ease';
 }
 
 function showSuccess(msg) {
-    successMsg.innerText = msg;
+    successMsg.innerHTML = msg;
     successMsg.style.display = 'block';
     errorMsg.style.display = 'none';
 }
@@ -136,8 +135,12 @@ function showSuccess(msg) {
 function setLoading(state) {
     isLoading = state;
     submitBtn.disabled = state;
-    submitBtn.innerText = state
-        ? (isLogin ? 'جاري الدخول...' : 'جاري التسجيل...')
-        : (isLogin ? 'دخول' : 'تسجيل');
-    submitBtn.style.opacity = state ? '0.7' : '1';
+    if (state) {
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (isLogin ? 'جاري الدخول...' : 'جاري التسجيل...');
+    } else {
+        submitBtn.innerHTML = isLogin
+            ? '<i class="fa-solid fa-right-to-bracket"></i> دخول'
+            : '<i class="fa-solid fa-user-plus"></i> إنشاء حساب';
+    }
+    submitBtn.style.opacity = state ? '0.75' : '1';
 }

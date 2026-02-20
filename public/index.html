@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رفيق رمضان 🌙</title>
-    <meta name="description" content="رفيقك في رمضان - أوقات الصلاة، الأذكار، ختمة القرآن، التسبيح">
+    <meta name="description" content="رفيقك في رمضان - أوقات الصلاة، الأذكار، ختمة القرآن، التسبيح، الأدعية">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -21,72 +21,146 @@
 
 <body class="dark-mode">
 
-    <!-- Celebration Modal -->
-    <div id="celebration-modal" class="modal" style="display:none;">
-        <div class="modal-content celebration-modal-content">
+    <!-- =================== SETUP WIZARD MODAL =================== -->
+    <div id="setup-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="text-align:right;">
             <div class="modal-top-bar"></div>
-            <i class="fa-solid fa-star celebration-star"></i>
-            <h2 style="margin-bottom:8px; font-size:1.6rem;">أحسنت! تقبل الله 🤲</h2>
-            <p id="celebration-message" style="color:var(--text-gray); margin-bottom:20px; font-size:1rem;">أتممت وردك
-                لهذه الصلاة.</p>
-            <div class="duaa-box-reward">
-                <h4 style="color:var(--primary-color); margin-bottom:8px; font-size:1rem;">🎁 هدية دعاء:</h4>
-                <p id="reward-duaa" style="font-size:1.2rem; line-height:1.8; font-family:'Amiri', serif;">...</p>
+            <div style="text-align:center; margin-bottom:20px;">
+                <i class="fa-solid fa-moon"
+                    style="font-size:3rem; color:#10B981; margin-bottom:12px; display:block;"></i>
+                <h2 style="font-family:'Amiri',serif; font-size:1.7rem; color:var(--primary-color);">أهلاً وسهلاً! 🌙
+                </h2>
+                <p style="opacity:0.7; font-size:0.95rem; margin-top:6px;">دعنا نضبط التطبيق حسب أهدافك</p>
             </div>
-            <button onclick="document.getElementById('celebration-modal').style.display='none'" class="auth-btn"
-                style="margin-top:15px;">
-                <i class="fa-solid fa-arrow-left"></i> استمر
+
+            <h4 style="margin-bottom:8px; font-size:1rem;"><i class="fa-solid fa-book-quran"
+                    style="color:#10B981; margin-left:6px;"></i> كم مرة تريد ختم القرآن في رمضان؟</h4>
+            <select id="setup-goal"
+                style="width:100%; padding:12px; border-radius:12px; font-family:'Cairo',sans-serif; font-size:1rem; margin-bottom:18px; border:1.5px solid #10B981; background:var(--card-dark); color:var(--text-light);">
+                <option value="1">1 مرة (20 صفحة يومياً)</option>
+                <option value="2">2 مرات (40 صفحة يومياً)</option>
+                <option value="3">3 مرات (60 صفحة يومياً)</option>
+            </select>
+
+            <p
+                style="font-size:0.9rem; opacity:0.7; margin-bottom:18px; background:rgba(16,185,129,0.1); padding:10px; border-radius:10px;">
+                <i class="fa-solid fa-info-circle" style="color:#10B981; margin-left:6px;"></i>
+                سيُطلب منك السماح بالموقع الجغرافي لمعرفة أوقات الصلاة، والإشعارات للتذكير بالأذكار.
+            </p>
+
+            <button onclick="app.closeSetupWizard()" class="auth-btn">
+                <i class="fa-solid fa-check"></i> ابدأ رمضانك 🚀
             </button>
         </div>
     </div>
 
+    <!-- =================== CELEBRATION MODAL =================== -->
+    <div id="celebration-modal" class="modal" style="display:none;">
+        <div class="modal-content celebration-modal-content">
+            <div class="modal-top-bar"></div>
+            <i class="fa-solid fa-star celebration-star"></i>
+            <h2 style="font-family:'Amiri',serif; font-size:1.6rem; margin-bottom:8px;">أحسنت! تقبل الله 🤲</h2>
+            <p id="celebration-message" style="color:var(--text-gray); margin-bottom:18px; font-size:1rem;"></p>
+
+            <div class="duaa-box-reward" style="text-align:right;">
+                <h4 style="color:var(--primary-color); margin-bottom:8px; font-size:0.9rem;">
+                    <i class="fa-solid fa-gift"></i> هدية دعاء:
+                </h4>
+                <p id="reward-duaa" style="font-family:'Amiri',serif; font-size:1.25rem; line-height:1.9;"></p>
+            </div>
+            <button onclick="app.closeCelebration()" class="auth-btn" style="margin-top:15px;">
+                <i class="fa-solid fa-arrow-left"></i> استمر بارك الله فيك
+            </button>
+        </div>
+    </div>
+
+    <!-- =================== SETTINGS MODAL =================== -->
+    <div id="settings-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="text-align:right;">
+            <h3 style="color:var(--primary-color); margin-bottom:20px; font-size:1.3rem;">
+                <i class="fa-solid fa-gear"></i> الإعدادات
+            </h3>
+
+            <h4 style="margin-bottom:8px; font-size:1rem;">
+                <i class="fa-solid fa-bell" style="color:#10B981; margin-left:6px;"></i> تذكير بالأذكار
+            </h4>
+            <select id="notif-interval"
+                style="width:100%; padding:12px; border-radius:12px; font-family:'Cairo',sans-serif; font-size:1rem; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1); background:var(--card-dark); color:var(--text-light);">
+                <option value="0">غير مفعّل</option>
+                <option value="15">كل 15 دقيقة</option>
+                <option value="30">كل 30 دقيقة</option>
+                <option value="60">كل ساعة</option>
+                <option value="120">كل ساعتين</option>
+                <option value="240">كل 4 ساعات</option>
+            </select>
+
+            <h4 style="margin-bottom:8px; font-size:1rem;">
+                <i class="fa-solid fa-location-dot" style="color:#10B981; margin-left:6px;"></i> الموقع الجغرافي
+            </h4>
+            <button onclick="app.detectLocation()" class="reset-btn"
+                style="width:100%; padding:12px; font-size:0.95rem; margin-bottom:8px;">
+                <i class="fa-solid fa-location-crosshairs"></i> تحديث موقعي
+            </button>
+            <div id="location-status" style="font-size:0.88rem; color:var(--primary-color); margin-bottom:18px;"></div>
+
+            <button onclick="app.closeSettings()" class="auth-btn">
+                <i class="fa-solid fa-check"></i> حفظ وإغلاق
+            </button>
+        </div>
+    </div>
+
+    <!-- =================== APP CONTAINER =================== -->
     <div class="app-container">
+
         <!-- Header -->
         <header class="app-header">
             <div class="logo">
                 <i class="fa-solid fa-moon"></i>
                 <h1>رفيق رمضان</h1>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button id="theme-toggle" class="icon-btn" aria-label="تغيير المظهر">
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button id="theme-toggle" class="icon-btn" title="تغيير المظهر">
                     <i class="fa-solid fa-sun"></i>
                 </button>
-                <button id="params-btn" class="icon-btn" onclick="app.openSettings()" aria-label="الإعدادات">
+                <button class="icon-btn" onclick="app.openSettings()" title="الإعدادات">
                     <i class="fa-solid fa-gear"></i>
                 </button>
-                <button id="logout-btn" class="icon-btn" aria-label="خروج">
+                <button id="logout-btn" class="icon-btn" title="تسجيل خروج">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main -->
         <main id="main-content">
 
-            <!-- Home Section -->
+            <!-- =================== HOME =================== -->
             <section id="home" class="active-section">
-                <div class="greeting-card">
-                    <h2>رمضان كريم 🌙</h2>
-                    <p id="hijri-date" style="opacity:0.9; font-size:1rem; margin-top:4px;">جاري تحميل التاريخ...</p>
 
-                    <!-- Next Prayer Card -->
+                <!-- Greeting Card -->
+                <div class="greeting-card">
+                    <h2 id="greeting-text">رمضان كريم 🌙</h2>
+                    <p id="hijri-date" style="font-size:0.95rem; opacity:0.85; margin-top:4px;">جاري تحميل التاريخ...
+                    </p>
+
+                    <!-- Next Prayer -->
                     <div class="next-prayer-card">
                         <div
                             style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:0.95rem; opacity:0.9; font-weight:600;">⏰ الصلاة القادمة</span>
+                            <span style="font-size:0.92rem; opacity:0.9; font-weight:600;">⏰ الصلاة القادمة</span>
                             <small id="time-remaining"
-                                style="font-size:0.85rem; background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:20px;">...</small>
+                                style="background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:20px; font-size:0.82rem;">...</small>
                         </div>
                         <div style="display:flex; justify-content:center; align-items:baseline; gap:12px;">
-                            <h3 id="next-prayer-name" style="margin:0; font-size:2rem; font-family:'Amiri',serif;">-
+                            <h3 id="next-prayer-name" style="margin:0; font-size:1.9rem; font-family:'Amiri',serif;">-
                             </h3>
                             <span id="next-prayer-time"
-                                style="font-weight:900; font-size:1.6rem; color:#86efad;">--:--</span>
+                                style="font-size:1.6rem; font-weight:900; color:#86efad;">--:--</span>
                         </div>
                     </div>
 
                     <!-- Prayer Times List -->
-                    <div id="prayer-times-list" style="margin-top:12px; display:none;"></div>
+                    <div id="prayer-times-list" style="display:none;"></div>
 
                     <!-- Progress Ring -->
                     <div class="daily-progress">
@@ -98,8 +172,9 @@
                                     fill="transparent" r="33" cx="40" cy="40" />
                             </svg>
                             <div class="progress-text">
-                                <span id="fasting-day" style="font-weight:700; font-size:0.8rem;">0 جزء</span>
-                                <small style="font-size:0.65rem; opacity:0.8;">من 30</small>
+                                <span id="fasting-day" style="font-weight:700; font-size:0.78rem; display:block;">0
+                                    جزء</span>
+                                <small style="font-size:0.62rem; opacity:0.75;">من 30</small>
                             </div>
                         </div>
                     </div>
@@ -107,232 +182,221 @@
 
                 <!-- Features Grid -->
                 <div class="features-grid">
-                    <div class="feature-card" onclick="app.navigate('azkar')" id="btn-azkar">
+                    <div class="feature-card" id="card-azkar" onclick="app._navigate('azkar')">
                         <div class="icon-bg"><i class="fa-solid fa-hands-praying"></i></div>
                         <h3>أذكار اليوم</h3>
-                        <p>الصباح والمساء</p>
+                        <p>الصباح والمساء وبعد الصلاة</p>
                     </div>
-                    <div class="feature-card" onclick="app.navigate('quran')" id="btn-quran">
+                    <div class="feature-card" id="card-quran" onclick="app._navigate('quran')">
                         <div class="icon-bg"><i class="fa-solid fa-book-quran"></i></div>
                         <h3>ختمة القرآن</h3>
-                        <p>توزيع على الصلوات</p>
+                        <p>توزيع القراءة على الصلوات</p>
                     </div>
-                    <div class="feature-card" onclick="app.navigate('tasbeeh')" id="btn-tasbeeh">
+                    <div class="feature-card" id="card-tasbeeh" onclick="app._navigate('tasbeeh')">
                         <div class="icon-bg"><i class="fa-solid fa-fingerprint"></i></div>
                         <h3>السبحة</h3>
-                        <p>عداد الأذكار</p>
+                        <p>عداد التسبيح والأذكار</p>
                     </div>
-                    <div class="feature-card" onclick="app.navigate('duaa')" id="btn-duaa">
+                    <div class="feature-card" id="card-duaa" onclick="app._navigate('duaa')">
                         <div class="icon-bg"><i class="fa-solid fa-star-and-crescent"></i></div>
                         <h3>أدعية رمضان</h3>
-                        <p>أدعية مأثورة</p>
+                        <p>أدعية مأثورة من القرآن والسنة</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Azkar Section -->
+            <!-- =================== AZKAR =================== -->
             <section id="azkar">
                 <div class="section-header">
-                    <button class="back-btn" onclick="app.navigate('home')"><i
-                            class="fa-solid fa-arrow-right"></i></button>
+                    <button class="back-btn" onclick="app._navigate('home')">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                     <h2>أذكار اليوم</h2>
                 </div>
+
                 <div class="tabs">
-                    <button class="tab-btn active" onclick="app.filterAzkar('morning')">
+                    <button class="tab-btn active" onclick="app.renderAzkar('morning')">
                         <i class="fa-solid fa-sun"></i> الصباح
                     </button>
-                    <button class="tab-btn" onclick="app.filterAzkar('evening')">
+                    <button class="tab-btn" onclick="app.renderAzkar('evening')">
                         <i class="fa-solid fa-moon"></i> المساء
                     </button>
-                    <button class="tab-btn" onclick="app.filterAzkar('prayer')">
+                    <button class="tab-btn" onclick="app.renderAzkar('prayer')">
                         <i class="fa-solid fa-mosque"></i> بعد الصلاة
                     </button>
                 </div>
+
                 <div id="azkar-list" class="azkar-container"></div>
             </section>
 
-            <!-- Quran Tracker Section -->
+            <!-- =================== QURAN =================== -->
             <section id="quran">
                 <div class="section-header">
-                    <button class="back-btn" onclick="app.navigate('home')"><i
-                            class="fa-solid fa-arrow-right"></i></button>
+                    <button class="back-btn" onclick="app._navigate('home')">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                     <h2>ختمة القرآن</h2>
                 </div>
 
                 <div class="planner-card">
-                    <h3 style="margin-bottom:15px; color:var(--primary-color); font-size:1.2rem;">📖 خطة الختمة</h3>
+                    <h3 style="color:var(--primary-color); margin-bottom:15px;">
+                        <i class="fa-solid fa-book-quran"></i> خطة الختمة
+                    </h3>
+
                     <div class="goal-input">
-                        <label style="font-size:1rem; font-weight:600;">كم مرة تريد ختم القرآن؟</label>
+                        <label style="font-size:1rem; font-weight:600; display:block; margin-bottom:10px;">كم مرة تريد
+                            ختم القرآن؟</label>
                         <div class="goal-controls">
-                            <button onclick="app.adjustGoal(-1)">−</button>
+                            <button onclick="app._adjustGoal(-1)">−</button>
                             <span id="khatma-goal-display"
-                                style="font-size:2rem; font-weight:900; color:var(--primary-color);">1</span>
-                            <button onclick="app.adjustGoal(1)">+</button>
+                                style="font-size:2.2rem; font-weight:900; color:var(--primary-color);">1</span>
+                            <button onclick="app._adjustGoal(1)">+</button>
                         </div>
                     </div>
 
                     <div class="breakdown-card">
-                        <h4 style="color:var(--primary-color); margin-bottom:12px; font-size:1rem;">📅 جدول القراءة
-                            اليومي</h4>
-                        <div class="daily-target">
-                            <p style="font-size:1.2rem; font-weight:700; margin-bottom:12px;">
-                                <span id="daily-pages">20</span> صفحة يومياً (جزء كامل)
-                            </p>
-                        </div>
+                        <h4 style="color:var(--primary-color); margin-bottom:12px;">
+                            <i class="fa-solid fa-calendar-check"></i> جدول القراءة اليومي
+                        </h4>
+                        <p style="font-size:1.15rem; font-weight:700; margin-bottom:14px; text-align:center;">
+                            <span id="daily-pages">20</span> صفحة يومياً
+                        </p>
 
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                            <div class="prayer-row" onclick="app.togglePrayerRead('fajr')">
+                        <div style="display:grid; grid-template-columns:1fr; gap:10px;">
+                            <div class="prayer-row" data-prayer="fajr" onclick="app._togglePrayerRead('fajr')">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="checkbox-circle" id="check-fajr"><i class="fa-solid fa-check"></i></div>
                                     <span style="font-size:1rem; font-weight:600;">🌅 الفجر</span>
                                 </div>
-                                <strong id="pages-fajr" style="font-size:1rem;">4 ص</strong>
+                                <strong id="pages-fajr" style="color:var(--primary-color);">4 ص</strong>
                             </div>
-                            <div class="prayer-row" onclick="app.togglePrayerRead('dhuhr')">
+                            <div class="prayer-row" data-prayer="dhuhr" onclick="app._togglePrayerRead('dhuhr')">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="checkbox-circle" id="check-dhuhr"><i class="fa-solid fa-check"></i>
                                     </div>
                                     <span style="font-size:1rem; font-weight:600;">☀️ الظهر</span>
                                 </div>
-                                <strong id="pages-dhuhr" style="font-size:1rem;">4 ص</strong>
+                                <strong id="pages-dhuhr" style="color:var(--primary-color);">4 ص</strong>
                             </div>
-                            <div class="prayer-row" onclick="app.togglePrayerRead('asr')">
+                            <div class="prayer-row" data-prayer="asr" onclick="app._togglePrayerRead('asr')">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="checkbox-circle" id="check-asr"><i class="fa-solid fa-check"></i></div>
                                     <span style="font-size:1rem; font-weight:600;">🌤️ العصر</span>
                                 </div>
-                                <strong id="pages-asr" style="font-size:1rem;">4 ص</strong>
+                                <strong id="pages-asr" style="color:var(--primary-color);">4 ص</strong>
                             </div>
-                            <div class="prayer-row" onclick="app.togglePrayerRead('maghrib')">
+                            <div class="prayer-row" data-prayer="maghrib" onclick="app._togglePrayerRead('maghrib')">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="checkbox-circle" id="check-maghrib"><i class="fa-solid fa-check"></i>
                                     </div>
                                     <span style="font-size:1rem; font-weight:600;">🌇 المغرب</span>
                                 </div>
-                                <strong id="pages-maghrib" style="font-size:1rem;">4 ص</strong>
+                                <strong id="pages-maghrib" style="color:var(--primary-color);">4 ص</strong>
                             </div>
-                            <div class="prayer-row" onclick="app.togglePrayerRead('isha')">
+                            <div class="prayer-row" data-prayer="isha" onclick="app._togglePrayerRead('isha')">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="checkbox-circle" id="check-isha"><i class="fa-solid fa-check"></i></div>
                                     <span style="font-size:1rem; font-weight:600;">🌙 العشاء</span>
                                 </div>
-                                <strong id="pages-isha" style="font-size:1rem;">4 ص</strong>
+                                <strong id="pages-isha" style="color:var(--primary-color);">4 ص</strong>
                             </div>
                         </div>
                     </div>
 
-                    <div style="margin-top: 20px; text-align: center;">
-                        <a href="https://quran.com" target="_blank" class="auth-btn"
-                            style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; width:auto; padding:12px 30px; font-size:1rem;">
-                            <i class="fa-solid fa-book-open"></i> اقرأ القرآن الكريم
+                    <!-- Quran Link -->
+                    <div style="margin-top:20px; text-align:center;">
+                        <a href="https://quran.com" target="_blank" rel="noopener" class="auth-btn"
+                            style="display:inline-flex; text-decoration:none; width:auto; padding:12px 28px;">
+                            <i class="fa-solid fa-book-open"></i>&nbsp; اقرأ القرآن الكريم
                         </a>
-                        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">عبر موقع Quran.com</p>
+                        <p style="font-size:0.78rem; opacity:0.55; margin-top:6px;">عبر موقع Quran.com</p>
                     </div>
                 </div>
 
+                <!-- Juz Tracker -->
                 <div class="juz-tracker">
-                    <h3 style="margin-bottom:15px; font-size:1.1rem;">📗 متابعة الأجزاء (30 جزء)</h3>
+                    <h3 style="margin-bottom:14px; font-size:1.1rem;">
+                        <i class="fa-solid fa-list-check" style="color:var(--primary-color);"></i> متابعة الأجزاء (30
+                        جزء)
+                    </h3>
+                    <p style="font-size:0.85rem; opacity:0.6; margin-bottom:12px;">اضغط على الجزء لتسجيل إتمامه ✅</p>
                     <div id="juz-grid" class="juz-grid"></div>
                 </div>
             </section>
 
-            <!-- Tasbeeh Section -->
+            <!-- =================== TASBEEH =================== -->
             <section id="tasbeeh">
                 <div class="section-header">
-                    <button class="back-btn" onclick="app.navigate('home')"><i
-                            class="fa-solid fa-arrow-right"></i></button>
+                    <button class="back-btn" onclick="app._navigate('home')">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                     <h2>السبحة الإلكترونية</h2>
                 </div>
+
                 <div class="tasbeeh-container">
-                    <div class="counter-display">
-                        <span id="tasbeeh-count">0</span>
-                    </div>
+                    <div class="counter-display" id="tasbeeh-count">0</div>
                     <div class="tasbeeh-label" id="tasbeeh-label">ابدأ التسبيح</div>
                     <button id="tasbeeh-btn" class="tasbeeh-btn">
                         <i class="fa-solid fa-fingerprint"></i>
                         <span>سبّح</span>
                     </button>
                     <div class="tasbeeh-controls">
-                        <button onclick="app.resetTasbeeh()" class="reset-btn">
+                        <button onclick="app._resetTasbeeh()" class="reset-btn">
                             <i class="fa-solid fa-rotate-left"></i> تصفير
                         </button>
-                        <button onclick="app.toggleSound()" id="sound-btn" class="icon-btn"
-                            style="border:1px solid var(--primary-color); border-radius:8px; padding:10px 15px;">
+                        <button onclick="app._toggleSound()" id="sound-btn" class="reset-btn">
                             <i class="fa-solid fa-volume-high"></i>
                         </button>
                     </div>
-                    <div style="margin-top:20px; text-align:center; opacity:0.6; font-size:0.9rem;">
-                        احتفال عند كل 33 تسبيحة 🎉
-                    </div>
+                    <p style="opacity:0.5; font-size:0.85rem; margin-top:20px; text-align:center;">
+                        <i class="fa-solid fa-star" style="color:#F59E0B;"></i>
+                        احتفال عند 33 و 66 و 99 تسبيحة
+                    </p>
                 </div>
             </section>
 
-            <!-- Duaa Section -->
+            <!-- =================== DUAA =================== -->
             <section id="duaa">
                 <div class="section-header">
-                    <button class="back-btn" onclick="app.navigate('home')"><i
-                            class="fa-solid fa-arrow-right"></i></button>
+                    <button class="back-btn" onclick="app._navigate('home')">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                     <h2>أدعية رمضانية</h2>
                 </div>
-                <div style="text-align:center; margin-bottom:15px;">
-                    <a href="douaa/Noor-Book.com  مختصر ترتيب ادعية ليالي رمضان 3 .pdf" download
-                        class="pdf-download-btn">
+
+                <!-- PDF Download -->
+                <div style="text-align:center; margin-bottom:18px;">
+                    <a href="douaa/adkar.pdf" download class="pdf-download-btn">
                         <i class="fa-solid fa-file-pdf"></i> تحميل كتاب الأدعية PDF
                     </a>
                 </div>
+
                 <div id="duaa-list" class="duaa-container">
-                    <div style="text-align:center; padding:40px; opacity:0.6;">
-                        <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;"></i>
-                        <p style="margin-top:10px;">جاري تحميل الأدعية...</p>
+                    <div style="text-align:center; padding:50px; opacity:0.5;">
+                        <i class="fa-solid fa-spinner fa-spin"
+                            style="font-size:2.5rem; color:var(--primary-color);"></i>
+                        <p style="margin-top:12px; font-size:1rem;">جاري تحميل الأدعية...</p>
                     </div>
                 </div>
             </section>
+
         </main>
-
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="modal" style="display:none;">
-            <div class="modal-content" style="text-align:right;">
-                <h3 style="margin-bottom:20px; color:var(--primary-color); font-size:1.3rem;">⚙️ الإعدادات</h3>
-
-                <h4 style="margin:10px 0; font-size:1rem;">🔔 تنبيهات الأذكار</h4>
-                <p style="font-size:0.9rem; opacity:0.7; margin-bottom:10px;">أرسل لي تذكير كل:</p>
-                <select id="notif-interval"
-                    style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; font-family:'Cairo',sans-serif; font-size:1rem;">
-                    <option value="0">غير مفعّل</option>
-                    <option value="15">15 دقيقة</option>
-                    <option value="30">30 دقيقة</option>
-                    <option value="60">1 ساعة</option>
-                    <option value="120">2 ساعة</option>
-                    <option value="240">4 ساعات</option>
-                </select>
-
-                <h4 style="margin:10px 0; font-size:1rem;">📍 الموقع الجغرافي</h4>
-                <button onclick="app.detectLocation()" class="reset-btn"
-                    style="width:100%; margin-bottom:10px; padding:12px;">
-                    <i class="fa-solid fa-location-dot"></i> تحديث موقعي (لأوقات الصلاة)
-                </button>
-                <div id="location-status" style="font-size:0.9rem; margin-bottom:15px; color:var(--primary-color);">
-                </div>
-
-                <button onclick="app.closeSettings()" class="auth-btn" style="margin-top:10px;">✅ حفظ وإغلاق</button>
-            </div>
-        </div>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="app.navigate('home')">
+            <button class="nav-item active" onclick="app._navigate('home')">
                 <i class="fa-solid fa-house"></i>
                 <span>الرئيسية</span>
             </button>
-            <button class="nav-item" onclick="app.navigate('quran')">
-                <i class="fa-solid fa-book-open"></i>
+            <button class="nav-item" onclick="app._navigate('quran')">
+                <i class="fa-solid fa-book-quran"></i>
                 <span>الختمة</span>
             </button>
-            <button class="nav-item" onclick="app.navigate('tasbeeh')">
+            <button class="nav-item" onclick="app._navigate('tasbeeh')">
                 <i class="fa-solid fa-fingerprint"></i>
                 <span>السبحة</span>
             </button>
-            <button class="nav-item" onclick="app.navigate('duaa')">
+            <button class="nav-item" onclick="app._navigate('duaa')">
                 <i class="fa-solid fa-star-and-crescent"></i>
                 <span>الأدعية</span>
             </button>
@@ -342,11 +406,7 @@
     <script src="script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(() => console.log('SW registered'))
-                    .catch(err => console.log('SW failed:', err));
-            });
+            navigator.serviceWorker.register('sw.js').catch(() => { });
         }
     </script>
 </body>
