@@ -39,20 +39,26 @@ authForm.addEventListener('submit', async (e) => {
             body: JSON.stringify({ username, password })
         });
 
-        const data = await res.json();
+        const contentType = res.headers.get("content-type");
+        let data;
+
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            data = await res.json();
+        } else {
+            // If response is not JSON (e.g. Server Error text or Vercel HTML error)
+            const text = await res.text();
+            throw new Error(text || 'حدث خطأ في السيرفر (غير معروف)');
+        }
 
         if (!res.ok) {
             throw new Error(data.msg || 'حدث خطأ ما');
         }
 
         if (isLogin) {
-            // Login Success
             localStorage.setItem('username', data.username);
             window.location.href = 'index.html';
         } else {
-            // Register Success
             showSuccess('تم التسجيل بنجاح! الرجاء تسجيل الدخول.');
-            // Switch to login view
             isLogin = true;
             updateUI();
             document.getElementById('username').value = '';
@@ -60,7 +66,13 @@ authForm.addEventListener('submit', async (e) => {
         }
 
     } catch (err) {
-        showError(err.message === 'Invalid Credentials' ? 'بيانات الدخول غير صحيحة' : err.message);
+        console.error('Login Error:', err);
+        // Clean up the error message if it's a long HTML string
+        let msg = err.message;
+        if (msg.includes('<!DOCTYPE html>')) {
+            msg = 'خطأ في السيرفر (500) - تأكد من قاعدة البيانات';
+        }
+        showError(msg === 'Invalid Credentials' ? 'بيانات الدخول غير صحيحة' : msg);
     }
 });
 
