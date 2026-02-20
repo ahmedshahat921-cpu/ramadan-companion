@@ -20,45 +20,58 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== MongoDB Connection (Optimized for Vercel Serverless) =====
-let cachedDb = null;
+let cachedConnection = null;
 
 async function connectToDatabase() {
-    if (cachedDb && mongoose.connection.readyState === 1) {
-        return cachedDb;
+    // Re-use cached connection if still alive
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+        return cachedConnection;
     }
 
     const uri = process.env.MONGO_URI;
 
     if (!uri) {
-        throw new Error('MONGO_URI is not defined. Please add it to your environment variables.');
+        throw new Error('MONGO_URI environment variable is not set on the server.');
     }
 
+    // Reset stale cached connection
+    cachedConnection = null;
+
     try {
-        const db = await mongoose.connect(uri, {
-            serverSelectionTimeoutMS: 10000,
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 15000,
+            connectTimeoutMS: 15000,
             socketTimeoutMS: 45000,
             bufferCommands: false,
+            maxPoolSize: 5,
         });
-        cachedDb = db;
+        cachedConnection = mongoose.connection;
         console.log('✅ MongoDB Connected Successfully');
-        return db;
+        return cachedConnection;
     } catch (err) {
-        cachedDb = null;
-        console.error('❌ MongoDB Connection Error:', err.message);
+        cachedConnection = null;
+        console.error('❌ MongoDB Error:', err.message);
         throw err;
     }
 }
 
-// Ensure DB connection on every request (important for Vercel serverless)
+// Skip DB connection for static files — only enforce on API routes
 app.use(async (req, res, next) => {
+    // Static assets served by express.static above — skip DB for them
+    const isApiRoute = req.method === 'POST' || req.path === '/login' || req.path === '/register';
+    if (!isApiRoute) return next();
+
     try {
         await connectToDatabase();
         next();
     } catch (error) {
-        console.error('Database connection failed:', error.message);
+        const isMissingEnv = error.message.includes('not set');
+        console.error('DB middleware error:', error.message);
         res.status(500).json({
             success: false,
-            msg: 'فشل الاتصال بقاعدة البيانات. حاول مرة أخرى.',
+            msg: isMissingEnv
+                ? 'خطأ في ضبط السيرفر: يرجى إضافة MONGO_URI في إعدادات Vercel'
+                : 'فشل الاتصال بقاعدة البيانات. حاول مرة أخرى بعد لحظة.',
         });
     }
 });
