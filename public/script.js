@@ -216,6 +216,15 @@ class RamadanApp {
         }
         this.state.currentSection = sectionId;
         window.scrollTo(0, 0);
+
+        // Render section-specific content on navigation
+        if (sectionId === 'tasbeeh') {
+            this._renderTasbeehAzkarSelector();
+            this._updateTasbeehArabicDisplay();
+        }
+        if (sectionId === 'azkar') {
+            this.renderAzkar('morning');
+        }
     }
 
     // ------------------------------------------
@@ -489,25 +498,24 @@ class RamadanApp {
             infoEl.textContent = `الجزء ${this.quranJuz} | صفحة ${pageNum} من ${juzInfo[1]}`;
         }
 
-        // ===== Quran Page CDN sources (tested - ordered by reliability) =====
+        // ===== Quran Page CDN sources =====
         const SOURCES = [
-            // #1: Islamic Network CDN — confirmed 200 OK ✅ (high-resolution colored tajweed)
+            // #1: Islamicbook.ws — colorful tajweed style (matches user's desired image)
+            `https://islamicbook.ws/${pageNum}/${pageNum}.jpg`,
+            // #2: Islamic Network CDN — confirmed 200 OK via server test
             `https://cdn.islamic.network/quran/images/high-resolution/${pageNum}.png`,
-            // #2: QuranFlash with www prefix (301 redirect target) ✅
+            // #3: QuranFlash colored tajweed (www redirect)
             `https://www.quranflash.com/assets/jQ/pages/p${padded}.jpg`,
-            // #3: QuranFlash without www (follows 301 to #2)
-            `https://quranflash.com/assets/jQ/pages/p${padded}.jpg`,
             // #4: Amazon S3 backup
             `https://quran-images.s3.eu-west-1.amazonaws.com/hafs/${pageNum}.png`,
         ];
 
         if (imgEl) {
             imgEl.src = '';
-            imgEl.style.opacity = '0';
+            imgEl.style.opacity = '0.4';
             imgEl.style.display = 'block';
             imgEl.alt = `صفحة ${pageNum}`;
 
-            // Hide fallback text from previous attempt
             const fb = document.getElementById('quran-text-fallback');
             if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
 
@@ -515,18 +523,17 @@ class RamadanApp {
 
             const tryLoad = () => {
                 if (srcIndex >= SOURCES.length) {
-                    // All CDNs failed — show text fallback with direct link
                     imgEl.style.display = 'none';
                     if (fb) {
                         fb.style.display = 'block';
                         fb.innerHTML = `
-                            <div style="text-align:center; padding:20px; background:rgba(16,185,129,0.1); border-radius:12px; margin:10px 0;">
-                                <i class="fa-solid fa-circle-exclamation" style="color:#F59E0B; font-size:2rem; display:block; margin-bottom:10px;"></i>
-                                <p style="opacity:0.8; margin-bottom:12px;">تعذّر تحميل صورة الصفحة. اضغط الزر أدناه لقراءتها مباشرة:</p>
+                            <div style="text-align:center;padding:20px;background:rgba(16,185,129,0.1);border-radius:12px;">
+                                <i class="fa-solid fa-circle-exclamation" style="color:#F59E0B;font-size:2rem;display:block;margin-bottom:10px;"></i>
+                                <p style="opacity:0.8;margin-bottom:12px;">تعذّر تحميل الصفحة. اضغط للقراءة المباشرة:</p>
                                 <a href="https://quran.com/page/${pageNum}" target="_blank" rel="noopener"
-                                   style="display:inline-block; background:#10B981; color:white; padding:10px 20px;
-                                          border-radius:10px; text-decoration:none; font-weight:700; font-size:1rem;">
-                                    <i class="fa-solid fa-book-open"></i> افتح صفحة ${pageNum} مباشرة
+                                   style="display:inline-block;background:#10B981;color:white;padding:10px 20px;
+                                          border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;">
+                                    <i class="fa-solid fa-book-open"></i> افتح صفحة ${pageNum}
                                 </a>
                             </div>`;
                     }
@@ -535,15 +542,14 @@ class RamadanApp {
 
                 const url = SOURCES[srcIndex];
                 const tmp = new Image();
-                tmp.crossOrigin = 'anonymous';
+                // ❌ NO crossOrigin here — it blocks images that don't send CORS headers
                 tmp.onload = () => {
                     imgEl.src = url;
                     imgEl.style.opacity = '1';
                     imgEl.style.display = 'block';
                 };
                 tmp.onerror = () => { srcIndex++; tryLoad(); };
-                // Small timeout between attempts to avoid blocking
-                setTimeout(() => { tmp.src = url; }, srcIndex * 100);
+                tmp.src = url;
             };
 
             tryLoad();
